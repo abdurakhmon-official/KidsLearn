@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  // Testlar va skriptlar `dist/` ga tushmasligi kerak — ular faqat
+  // development uchun va `jest` / `node` ularni to'g'ridan-to'g'ri o'qiydi.
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/__tests__/**", "scripts"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "declaration": true,
+    "noResolve": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "emitDeclarationOnly": false,
+    "inlineSources": true
+  }
+}

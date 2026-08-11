@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8a7bff" />
+      <stop offset="100%" stop-color="#6d51ec" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  <g fill="#ffffff">
+    <!-- Ochiq kitob — ta'lim belgisi -->
+    <path d="M256 152c-34-24-76-34-118-30-12 1-22 11-22 24v168c0 14 12 25 26 24 38-4 75 5 106 26 5 3 11 3 16 0 31-21 68-30 106-26 14 1 26-10 26-24V146c0-13-10-23-22-24-42-4-84 6-118 30z" opacity="0.95"/>
+    <path d="M256 152v212" stroke="#6d51ec" stroke-width="14" stroke-linecap="round" fill="none"/>
+  </g>
+  <!-- Yulduz — mukofot -->
+  <path d="M256 384l22 45 49 7-35 35 8 49-44-23-44 23 8-49-35-35 49-7z" fill="#ffd05c"/>
+</svg>

@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kidslearn-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-kidslearn}
+    ports:
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - kidslearn-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # API baza tayyor bo'lgunicha kutadi, aks holda migratsiya yiqiladi.
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-kidslearn}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    container_name: kidslearn-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      STAGE: production
+      PORT: 9100
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-kidslearn}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET majburiy}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      # Brauzer UI'ni shu manzildan ochadi — CORS aynan shunga ruxsat beradi.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      SWAGGER_PATH: ${SWAGGER_PATH:-/docs}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+    ports:
+      - '${API_PORT:-9100}:9100'
+
+  ui:
+    build:
+      context: ./ui
+      args:
+        # `NEXT_PUBLIC_*` build vaqtida client bundle'ga kiradi, shuning uchun
+        # `args` da beriladi. Manzil **brauzer** ko'radigan bo'lsin —
+        # so'rovni brauzer yuboradi, `ui` konteyneri emas.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:9100/api/v1}
+    container_name: kidslearn-ui
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '${UI_PORT:-3000}:3000'
+
+volumes:
+  kidslearn-pgdata:

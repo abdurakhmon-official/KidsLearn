@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+  previewFeatures = ["typedSql"]
+}
+
+generator zod {
+  provider                  = "zod-prisma-types"
+  output                    = "../generated/zod"
+  createRelationValuesTypes = "true"
+  useMultipleFiles          = "true"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  fullName  String
+  email     String    @unique
+  phone     String?
+  password  String
+  role      USER_ROLE @default(PARENT)
+  avatar    String?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  children      Child[]
+  notifications Notification[]
+  uploads       MediaAsset[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Child {
+  id        String   @id @default(cuid())
+  parentId  String
+  fullName  String
+  birthDate DateTime @db.Date
+  avatar    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent         User             @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  stats          ChildStats?
+  lessonProgress LessonProgress[]
+  gameSessions   GameSession[]
+  awards         Award[]
+  dailyActivity  DailyActivity[]
+  notifications  Notification[]
+
+  @@index([parentId])
+  @@index([birthDate])
+  @@map("children")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons Lesson[]
+  games   Game[]
+
+  @@index([active])
+  @@map("categories")
+}
+
+model Lesson {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  categoryId  String
+  ageGroup    AGE_GROUP
+  coverImage  String?
+  videoUrl    String?
+  audioUrl    String?
+  points      Int       @default(10)
+  order       Int       @default(0)
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  media    LessonMedia[]
+  progress LessonProgress[]
+
+  @@index([categoryId])
+  @@index([ageGroup, active])
+  @@index([createdAt])
+  @@map("lessons")
+}
+
+model LessonMedia {
+  id        String     @id @default(cuid())
+  lessonId  String
+  type      MEDIA_TYPE
+  url       String
+  caption   String?
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+  @@map("lesson_media")
+}
+
+model Game {
+  id               String    @id @default(cuid())
+  code             GAME_TYPE
+  title            String
+  description      String?
+  categoryId       String?
+  ageGroup         AGE_GROUP
+  coverImage       String?
+  instructionAudio String?
+  pointsPerCorrect Int       @default(5)
+  config           Json?
+  order            Int       @default(0)
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  category Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  items    GameItem[]
+  sessions GameSession[]
+
+  @@index([categoryId])
+  @@index([ageGroup, active])
+  @@index([code])
+  @@map("games")
+}
+
+model GameItem {
+  id           String   @id @default(cuid())
+  gameId       String
+  promptText   String?
+  promptImage  String?
+  promptAudio  String?
+  correctValue String
+  options      Json
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@map("game_items")
+}
+
+model MediaAsset {
+  id           String     @id @default(cuid())
+  type         MEDIA_TYPE
+  url          String
+  key          String     @unique
+  originalName String
+  mimeType     String
+  size         Int
+  uploadedById String?
+  createdAt    DateTime   @default(now())
+
+  uploader User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("media_assets")
+}
+
+model LessonProgress {
+  id              String          @id @default(cuid())
+  childId         String
+  lessonId        String
+  status          PROGRESS_STATUS @default(IN_PROGRESS)
+  progressPercent Int             @default(0)
+  watchedSeconds  Int             @default(0)
+  pointsEarned    Int             @default(0)
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime        @updatedAt
+
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, lessonId])
+  @@index([childId, status])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+model GameSession {
+  id              String   @id @default(cuid())
+  childId         String
+  gameId          String
+  totalItems      Int
+  correctCount    Int
+  wrongCount      Int
+  score           Int
+  stars           Int      @default(0)
+  durationSeconds Int?
+  createdAt       DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  game  Game  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([childId, createdAt])
+  @@index([gameId])
+  @@map("game_sessions")
+}
+
+model ChildStats {
+  childId          String    @id
+  totalPoints      Int       @default(0)
+  totalStars       Int       @default(0)
+  gamesPlayed      Int       @default(0)
+  lessonsCompleted Int       @default(0)
+  streakDays       Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActivityAt   DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("child_stats")
+}
+
+model DailyActivity {
+  id               String   @id @default(cuid())
+  childId          String
+  date             DateTime @db.Date
+  points           Int      @default(0)
+  gamesPlayed      Int      @default(0)
+  lessonsCompleted Int      @default(0)
+  activeSeconds    Int      @default(0)
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, date])
+  @@index([date])
+  @@map("daily_activity")
+}
+
+model Award {
+  id          String     @id @default(cuid())
+  childId     String
+  medal       MEDAL_TYPE
+  code        String
+  title       String
+  description String?
+  icon        String?
+  earnedAt    DateTime   @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, code])
+  @@index([childId, earnedAt])
+  @@map("awards")
+}
+
+model Notification {
+  id        String            @id @default(cuid())
+  userId    String
+  childId   String?
+  type      NOTIFICATION_TYPE
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child Child? @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model RevokedToken {
+  jti       String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("revoked_tokens")
+}
+
+enum USER_ROLE {
+  ADMIN
+  PARENT
+}
+
+enum AGE_GROUP {
+  AGE_1_2
+  AGE_3_4
+  AGE_5_7
+}
+
+enum MEDIA_TYPE {
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+enum GAME_TYPE {
+  COLOR_MATCH
+  ANIMAL_SOUND
+  LETTER_MATCH
+  NUMBER_MATCH
+  PUZZLE
+  MEMORY
+}
+
+enum PROGRESS_STATUS {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MEDAL_TYPE {
+  BRONZE
+  SILVER
+  GOLD
+  DIAMOND
+}
+
+enum NOTIFICATION_TYPE {
+  NO_ACTIVITY_TODAY
+  NEW_LESSON
+  AWARD_EARNED
+}
