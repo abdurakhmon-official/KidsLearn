@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AGE_GROUP, GAME_TYPE } from '@/generated/prisma';
+import { MAX_MOVES } from '@/utils/game-rules';
 
 export const GameOptionSchema = z.object({
   value: z.string().min(1),
@@ -52,6 +53,8 @@ export const GameSearchSchema = z.object({
 });
 
 export const SubmitGameInputSchema = z.object({
+  roundId: z.string().min(1),
+
   answers: z
     .array(
       z.object({
@@ -59,7 +62,9 @@ export const SubmitGameInputSchema = z.object({
         value: z.string().nullable().optional(),
       }),
     )
-    .min(1),
+    .default([]),
+
+  moves: z.array(z.tuple([z.number().int().min(0), z.number().int().min(0)])).max(MAX_MOVES).default([]),
   durationSeconds: z.coerce.number().int().min(0).optional().nullable(),
 });
 

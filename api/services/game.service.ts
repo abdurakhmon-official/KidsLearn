@@ -3,15 +3,15 @@ import { PlatformContext } from '@tsed/common';
 import { Inject, Injectable, InjectContext } from '@tsed/di';
 import { BadRequest, NotFound } from '@tsed/exceptions';
 import { Request } from 'express';
-import { Prisma } from '@/generated/prisma';
+import { GAME_TYPE, Prisma } from '@/generated/prisma';
 import { BasicSearch, BasicSearchSchema } from '@/inputs';
 import { CreateGameInput, CreateGameInputSchema, GameItemInput, GameItemInputSchema, GameOption, GameSearch, GameSearchSchema, SubmitGameInput, SubmitGameInputSchema, UpdateGameInput, UpdateGameInputSchema } from '@/inputs/game.input';
 import { ActivityService } from '@/services/activity.service';
 import { shuffle } from '@/utils/shuffle';
 import { starsFor } from '@/utils/stars';
+import { Move, buildMemoryLayout, buildPuzzleLayout, memoryPairs, puzzleSide, verifyMemory, verifyPuzzle } from '@/utils/game-rules';
 import { GAME_SORT_KEYS, GameAnswerResult, GameConfig } from '@/types/game';
 import { buildSorting } from '@/utils/sorting';
-
 
 @Injectable()
 export class GameService {
@@ -250,16 +250,29 @@ export class GameService {
     const config = (game.config ?? {}) as GameConfig;
     const perRound = Number(config.itemsPerRound) || items.length;
 
-    const round = shuffle(items)
-      .slice(0, perRound)
-      .map(({ correctValue, options, ...item }) => ({
-        ...item,
-        options: shuffle((options ?? []) as unknown as GameOption[]),
-      }));
+    const picked = shuffle(items).slice(0, perRound);
+
+    const round = picked.map(({ correctValue, options, ...item }) => ({
+      ...item,
+      options: shuffle((options ?? []) as unknown as GameOption[]),
+    }));
+
+    const layout = this.buildLayout(game.code, config, picked);
+
+    const saved = await prisma.gameRound.create({
+      data: {
+        childId: child.id,
+        gameId: game.id,
+        itemIds: picked.map(item => item.id),
+        layout: layout ?? Prisma.DbNull,
+      },
+      select: { id: true },
+    });
 
     return {
       success: true,
       data: {
+        roundId: saved.id,
         game: {
           id: game.id,
           code: game.code,
@@ -269,10 +282,27 @@ export class GameService {
           config: game.config,
         },
         items: round,
+        layout,
         count: round.length,
         child: { id: child.id, fullName: child.fullName },
       },
     };
+  }
+
+  private buildLayout(code: GAME_TYPE, config: GameConfig, items: { options: unknown }[]) {
+    if (code === GAME_TYPE.PUZZLE) {
+      return buildPuzzleLayout(puzzleSide(config.rows, 3), puzzleSide(config.cols, 3));
+    }
+
+    if (code === GAME_TYPE.MEMORY) {
+      const faces = ((items[0]?.options ?? []) as GameOption[])
+        .map(option => option.label ?? option.image ?? '')
+        .filter(Boolean);
+
+      return buildMemoryLayout(memoryPairs(config.pairs), faces);
+    }
+
+    return null;
   }
 
   async submit(id: string, input: SubmitGameInput) {
@@ -280,27 +310,25 @@ export class GameService {
     const child = this.child!;
     const game = await this.findPlayableGame(id);
 
-    const itemIds = data.answers.map(answer => answer.itemId);
+    const round = await this.closeRound(data.roundId, id, child.id);
+
+    const roundItemIds = (round.itemIds ?? []) as unknown as string[];
 
     const items = await prisma.gameItem.findMany({
-      where: { id: { in: itemIds }, gameId: id },
+      where: { id: { in: roundItemIds }, gameId: id },
       select: { id: true, correctValue: true },
     });
 
-    if (items.length !== new Set(itemIds).size) {
-      throw new BadRequest('some answers refer to items outside this game');
-    }
-
     const correctByItem = new Map(items.map(item => [item.id, item.correctValue]));
 
-    const results: GameAnswerResult[] = data.answers.map(answer => ({
-      itemId: answer.itemId,
-      selected: answer.value ?? null,
-      correctValue: correctByItem.get(answer.itemId)!,
-      isCorrect: answer.value != null && answer.value === correctByItem.get(answer.itemId),
-    }));
+    const results = this.gradeRound(game.code, round, roundItemIds, correctByItem, data);
 
     const total = results.length;
+
+    if (!total) {
+      throw new BadRequest('this round has no items');
+    }
+
     const correctCount = results.filter(result => result.isCorrect).length;
     const wrongCount = total - correctCount;
     const percent = Math.round((correctCount / total) * 10000) / 100;
@@ -341,6 +369,60 @@ export class GameService {
     };
   }
 
+  private async closeRound(roundId: string, gameId: string, childId: string) {
+    const round = await prisma.gameRound.findUnique({ where: { id: roundId } });
+
+    if (!round || round.gameId !== gameId || round.childId !== childId) {
+      throw new NotFound('round not found');
+    }
+
+    const { count } = await prisma.gameRound.updateMany({
+      where: { id: roundId, submittedAt: null },
+      data: { submittedAt: new Date() },
+    });
+
+    if (!count) {
+      throw new BadRequest('this round has already been submitted');
+    }
+
+    return round;
+  }
+
+  private gradeRound(
+    code: GAME_TYPE,
+    round: { layout: Prisma.JsonValue },
+    roundItemIds: string[],
+    correctByItem: Map<string, string>,
+    data: SubmitGameInput,
+  ): GameAnswerResult[] {
+    if (code === GAME_TYPE.PUZZLE || code === GAME_TYPE.MEMORY) {
+      const itemId = roundItemIds[0];
+
+      if (!itemId) return [];
+
+      const layout = (round.layout ?? []) as unknown;
+      const moves = data.moves as Move[];
+
+      const solved =
+        code === GAME_TYPE.PUZZLE
+          ? verifyPuzzle(layout as number[], moves)
+          : verifyMemory(layout as string[], moves);
+
+      const correctValue = correctByItem.get(itemId) ?? '';
+
+      return [{ itemId, selected: solved ? correctValue : null, correctValue, isCorrect: solved }];
+    }
+
+    const answered = new Map(data.answers.map(answer => [answer.itemId, answer.value ?? null]));
+
+    return roundItemIds.map(itemId => {
+      const selected = answered.get(itemId) ?? null;
+      const correctValue = correctByItem.get(itemId) ?? '';
+
+      return { itemId, selected, correctValue, isCorrect: selected != null && selected === correctValue };
+    });
+  }
+
   private async findGame(id: string) {
     const game = await prisma.game.findUnique({ where: { id } });
 
@@ -378,7 +460,6 @@ export class GameService {
   private buildWhere(term: string | null | undefined, filters: GameSearch): Prisma.GameWhereInput {
     const where: Prisma.GameWhereInput = {};
 
-    // Faqat admin nofaol o'yinlarni ko'ra oladi.
     if (this.user?.isAdmin) {
       if (filters.active !== undefined) where.active = filters.active;
     } else {

@@ -40,7 +40,6 @@ function section(title) {
 }
 
 (async () => {
-  // ---------------------------------------------------------------- AUTH
   section('Auth');
 
   const adminLogin = await call('POST', '/auth/login', {
@@ -74,7 +73,6 @@ function section(title) {
   const childMe = await call('GET', '/auth/me', { token: child });
   check('child /me role=CHILD', childMe.json?.data?.role === 'CHILD', childMe.json);
 
-  // ------------------------------------------------------------ RBAC
   section('RBAC');
 
   check('no token -> 401', (await call('GET', '/auth/me')).status === 401);
@@ -87,7 +85,6 @@ function section(title) {
   );
   check('parent -> child-only endpoint 403', (await call('GET', '/lessons/for-me', { token: parent })).status === 403);
 
-  // --------------------------------------------------------- CHILDREN
   section('Children');
 
   const created = await call('POST', '/children', {
@@ -126,7 +123,6 @@ function section(title) {
     check('delete child', (await call('DELETE', `/children/${newChildId}`, { token: parent })).status === 200);
   }
 
-  // ------------------------------------------------------- CATEGORIES
   section('Categories');
 
   const cats = await call('GET', '/categories', { token: parent });
@@ -154,7 +150,6 @@ function section(title) {
     (await call('DELETE', `/categories/${ranglar.id}`, { token: admin })).status === 400,
   );
 
-  // ---------------------------------------------------------- LESSONS
   section('Lessons');
 
   const forMe = await call('GET', '/lessons/for-me', { token: child });
@@ -193,7 +188,6 @@ function section(title) {
     filterLesson.json?.data?.items?.length,
   );
 
-  // progress
   const progress1 = await call('POST', `/lessons/${lessonId}/progress`, {
     token: child,
     body: { progressPercent: 50, watchedSeconds: 30 },
@@ -212,14 +206,12 @@ function section(title) {
   });
   check('re-completing awards nothing', progress3.json?.data?.pointsEarned === 0, progress3.json?.data);
 
-  // wrong age group
   const babyLesson = filterLesson.json?.data?.items?.[0];
   check(
     'lesson from another age group -> 400',
     (await call('POST', `/lessons/${babyLesson.id}/progress`, { token: child, body: { status: 'COMPLETED' } })).status === 400,
   );
 
-  // ------------------------------------------------------------ GAMES
   section('Games');
 
   const gamesForMe = await call('GET', '/games/for-me', { token: child });
@@ -240,7 +232,6 @@ function section(title) {
   const getGameAsAdmin = await call('GET', `/games/${game.id}`, { token: admin });
   check('game detail shows items to admin', Array.isArray(getGameAsAdmin.json?.data?.items));
 
-  // to'g'ri javoblarni admin orqali olamiz va hammasini to'g'ri yuboramiz
   const items = getGameAsAdmin.json.data.items;
   const perfect = await call('POST', `/games/${game.id}/submit`, {
     token: child,
@@ -251,7 +242,7 @@ function section(title) {
   });
   check('perfect submit -> 3 stars', perfect.json?.data?.session?.stars === 3, perfect.json?.data?.session);
   check('perfect submit -> 100%', perfect.json?.data?.percent === 100, perfect.json?.data?.percent);
-  // Medal bir marta beriladi, shuning uchun qayta yugurtirishda ro'yxatdan tekshiramiz.
+
   const awardsAfterPerfect = await call('GET', '/progress/me/awards', { token: child });
   check(
     'PERFECT_GAME award granted',
@@ -277,7 +268,6 @@ function section(title) {
     (await call('GET', `/games/${otherGroupGame.id}/play`, { token: child })).status === 400,
   );
 
-  // admin item CRUD
   const addItem = await call('POST', `/games/${game.id}/items`, {
     token: admin,
     body: {
@@ -301,7 +291,6 @@ function section(title) {
     );
   }
 
-  // -------------------------------------------------------- PROGRESS
   section('Progress & awards');
 
   const myProgress = await call('GET', '/progress/me', { token: child });
@@ -320,7 +309,6 @@ function section(title) {
     (await call('GET', `/children/${otherChild.id}/progress`, { token: child })).status === 403,
   );
 
-  // ------------------------------------------------------- DASHBOARD
   section('Dashboard');
 
   const dash = await call('GET', `/dashboard/parent?childId=${zilola.id}`, { token: parent });
@@ -351,7 +339,6 @@ function section(title) {
     groupBoard.json?.data?.map(r => r.child.ageGroup),
   );
 
-  // --------------------------------------------------- NOTIFICATIONS
   section('Notifications');
 
   const list = await call('GET', '/notifications/paginated', { token: parent });
@@ -373,7 +360,6 @@ function section(title) {
   const digestAgain = await call('POST', '/notifications/daily-digest', { token: admin });
   check('digest is idempotent per day', digestAgain.json?.data?.sent === 0, digestAgain.json?.data);
 
-  // ------------------------------------------------------------ MEDIA
   section('Media');
 
   const reg = await call('POST', '/media', {
@@ -399,13 +385,11 @@ function section(title) {
 
   check('parent cannot list media', (await call('GET', '/media/paginated', { token: parent })).status === 403);
 
-  // ----------------------------------------------------------- LOGOUT
   section('Logout');
 
   check('logout', (await call('POST', '/auth/logout', { token: parent })).status === 200);
   check('revoked token -> 401', (await call('GET', '/auth/me', { token: parent })).status === 401);
 
-  // ---------------------------------------------------------- SUMMARY
   console.log(`\n${'='.repeat(50)}`);
   console.log(`PASS: ${pass}   FAIL: ${fail}`);
   if (failures.length) {

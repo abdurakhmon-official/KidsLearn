@@ -6,6 +6,7 @@ export const CreateCategoryInputSchema = z.object({
   description: z.string().optional().nullable(),
   icon: z.string().optional().nullable(),
   color: z.string().optional().nullable(),
+  audioUrl: z.string().url().optional().nullable(),
   order: z.coerce.number().int().min(0).default(0),
   active: z.boolean().default(true),
 });

@@ -5,7 +5,7 @@ import { BadRequest, NotFound } from '@tsed/exceptions';
 import { PlatformCache } from '@tsed/platform-cache';
 import { CreateCategoryInput, CreateCategoryInputSchema, UpdateCategoryInput, UpdateCategoryInputSchema } from '@/inputs/category.input';
 import { slugify } from '@/utils/slug';
-import { CATEGORY_CACHE_TTL_MS } from '@/utils/constants';
+import { CATEGORY_CACHE_TTL_MS, DEFAULT_CATEGORY_COLOR, DEFAULT_CATEGORY_ICON } from '@/utils/constants';
 
 @Injectable()
 export class CategoryService {
@@ -46,7 +46,14 @@ export class CategoryService {
 
     await this.assertUnique(data.name, slug);
 
-    const category = await prisma.category.create({ data: { ...data, slug } });
+    const category = await prisma.category.create({
+      data: {
+        ...data,
+        slug,
+        icon: data.icon?.trim() || DEFAULT_CATEGORY_ICON,
+        color: data.color?.trim() || DEFAULT_CATEGORY_COLOR,
+      },
+    });
 
     await this.invalidate();
 

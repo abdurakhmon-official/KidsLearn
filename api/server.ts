@@ -3,10 +3,12 @@ configDotEnv();
 
 import { Configuration, Inject } from '@tsed/di';
 import { PlatformApplication } from '@tsed/common';
-import '@tsed/platform-express'; 
+import '@tsed/platform-express';
 import '@tsed/ajv';
 import '@tsed/swagger';
 import '@tsed/platform-cache';
+
+import '@tsed/platform-multer';
 import * as controllers from './controllers';
 import { Application, json, urlencoded } from 'express';
 import helmet from 'helmet';
@@ -18,9 +20,11 @@ import config from '@/config';
 import bearerToken from 'express-bearer-token';
 import { logging } from './middlewares/logging.middleware';
 import { get404 } from './middlewares/404.middleware';
-import { authRateLimit, globalRateLimit } from './middlewares/rate-limit.middleware';
+import { audioRateLimit, authRateLimit, globalRateLimit } from './middlewares/rate-limit.middleware';
 import { requestId } from './middlewares/request-id.middleware';
 import { CACHE_MAX_ENTRIES, CATEGORY_CACHE_TTL_MS } from '@/utils/constants';
+import { TTS_PRUNE_INTERVAL_MS, TTS_PRUNE_STARTUP_DELAY_MS } from '@/types/audio';
+import { AudioService } from '@/services/audio.service';
 import './middlewares/error.middleware';
 
 const API_ROOT = config.apiRoot;
@@ -85,6 +89,9 @@ export class Server {
   @Configuration()
   protected settings!: Configuration;
 
+  @Inject()
+  protected audioService!: AudioService;
+
   $beforeRoutesInit() {
     this.app.rawApp.set('trust proxy', 1);
     this.app.rawApp.set('query parser', 'extended');
@@ -93,7 +100,7 @@ export class Server {
     this.app.use(hpp());
     this.app.use(
       helmet({
-        contentSecurityPolicy: false, 
+        contentSecurityPolicy: false,
         crossOriginResourcePolicy: false,
       }),
     );
@@ -113,6 +120,8 @@ export class Server {
     this.app.use(json({ limit: '1mb' }));
     this.app.use(urlencoded({ extended: true }));
     this.app.use(bearerToken());
+
+    this.app.rawApp.use(`${API_ROOT}/audio/speak`, audioRateLimit());
   }
 
   $afterRoutesInit() {
@@ -125,5 +134,22 @@ export class Server {
     }
 
     this.app.use(get404());
+    this.scheduleTtsPrune();
+  }
+
+  private scheduleTtsPrune() {
+    const run = () => {
+      this.audioService
+        .pruneTtsCache()
+        .then(({ data }) => {
+          if (data.removed) {
+            console.info(`tts cache: removed ${data.removed} clips unused for ${data.days} days`);
+          }
+        })
+        .catch((error: Error) => console.warn(`tts cache prune failed: ${error.message}`));
+    };
+
+    setTimeout(run, TTS_PRUNE_STARTUP_DELAY_MS).unref();
+    setInterval(run, TTS_PRUNE_INTERVAL_MS).unref();
   }
 }

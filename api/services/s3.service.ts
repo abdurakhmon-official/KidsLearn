@@ -1,21 +1,54 @@
-import { GetObjectCommand, GetObjectCommandInput, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  GetObjectCommandInput,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import config from '@/config';
 import { HmacSHA256, enc } from 'crypto-js';
 import { BadRequest } from '@tsed/exceptions';
 import { PlatformContext } from '@tsed/common';
-import { Injectable, InjectContext } from '@tsed/di';
+import { Inject, Injectable, InjectContext } from '@tsed/di';
+import type { PlatformMulterFile } from '@tsed/platform-multer';
 import { Request } from 'express';
 import { addMinutes, format } from 'date-fns';
+import { extname } from 'node:path';
+import { MEDIA_TYPE } from '@/generated/prisma';
+import { MediaService } from '@/services/media.service';
 import { uuid } from '@/utils';
+import { MAX_UPLOAD_BYTES, UPLOAD_FOLDERS, UPLOAD_MIME_TYPES, UploadFolder } from '@/utils/constants';
+
+const DEFAULT_EXTENSIONS: Record<string, string> = {
+  'audio/mpeg': '.mp3',
+  'audio/mp3': '.mp3',
+  'audio/wav': '.wav',
+  'audio/x-wav': '.wav',
+  'audio/ogg': '.ogg',
+  'audio/webm': '.webm',
+  'audio/mp4': '.m4a',
+  'audio/aac': '.aac',
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'image/svg+xml': '.svg',
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+};
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 const serviceName = 's3';
+const S3_DELETE_BATCH = 1000;
 
 @Injectable()
 export class S3Service {
   @InjectContext()
   private context!: PlatformContext;
+
+  @Inject()
+  private mediaService!: MediaService;
 
   get req() {
     return this.context.getRequest<Request>();
@@ -82,21 +115,56 @@ export class S3Service {
     });
   }
 
-  async uploadFile(dataBuffer: Buffer, folder = 'default', fileName: string) {
+  async uploadFile(dataBuffer: Buffer, folder = 'default', fileName: string, contentType?: string) {
     const key = `${folder}/${format(new Date(), 'yyyyMMdd')}/${fileName}`;
 
+    return await this.putObject(key, dataBuffer, contentType);
+  }
+
+  async putObject(key: string, body: Buffer, contentType?: string) {
     const command = new PutObjectCommand({
       Bucket: config.AWS_S3_BUCKET,
       Key: key,
-      Body: dataBuffer,
+      Body: body,
+      ...(contentType ? { ContentType: contentType } : {}),
     });
     await s3Client.send(command);
 
     return key;
   }
 
+  async deleteObjects(keys: string[]) {
+    const unique = [...new Set(keys.filter(Boolean))];
+
+    if (!unique.length || !config.AWS_S3_BUCKET) {
+      return 0;
+    }
+
+    for (let index = 0; index < unique.length; index += S3_DELETE_BATCH) {
+      const chunk = unique.slice(index, index + S3_DELETE_BATCH);
+
+      await s3Client.send(
+        new DeleteObjectsCommand({
+          Bucket: config.AWS_S3_BUCKET,
+          Delete: { Objects: chunk.map(Key => ({ Key })), Quiet: true },
+        }),
+      );
+    }
+
+    return unique.length;
+  }
+
+  assetUrl(key: string) {
+    const path = key
+      .split('/')
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+
+    return `${config.publicApiUrl}/s3/file/${path}`;
+  }
+
   async generatePolicy(folder: string, contentType: string, fileName: string) {
-    if (['brands', 'products', 'avatars'].indexOf(folder) < 0) {
+    if (!UPLOAD_FOLDERS.includes(folder as UploadFolder)) {
       throw new BadRequest('Invalid folder');
     }
 
@@ -155,15 +223,42 @@ export class S3Service {
     return kSigning;
   }
 
-  async upload(folder: string, file: any) {
-    const { buffer, originalname, size } = file;
+  async upload(folder: string, file?: PlatformMulterFile) {
+    if (!file) {
+      throw new BadRequest('file is required');
+    }
 
-    const key = await this.uploadFile(buffer, folder, originalname);
+    if (!UPLOAD_FOLDERS.includes(folder as UploadFolder)) {
+      throw new BadRequest(`folder must be one of: ${UPLOAD_FOLDERS.join(', ')}`);
+    }
 
-    return {
-      success: true,
-      _message: 'Uploaded!',
-      key: key,
-    };
+    if (!config.AWS_S3_BUCKET) {
+      throw new BadRequest('file storage is not configured on the server');
+    }
+
+    const mimeType = file.mimetype?.split(';')[0].trim().toLowerCase() ?? '';
+    const type = UPLOAD_MIME_TYPES[mimeType];
+
+    if (!type) {
+      throw new BadRequest(`unsupported file type: ${file.mimetype}`);
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new BadRequest(`file is larger than ${Math.floor(MAX_UPLOAD_BYTES / (1024 * 1024))} MB`);
+    }
+
+    const extension = extname(file.originalname || '').toLowerCase() || DEFAULT_EXTENSIONS[mimeType] || '';
+    const key = await this.uploadFile(file.buffer, folder, `${uuid()}${extension}`, mimeType);
+
+    const { data } = await this.mediaService.register({
+      type: MEDIA_TYPE[type],
+      url: this.assetUrl(key),
+      key,
+      originalName: file.originalname || key,
+      mimeType,
+      size: file.size,
+    });
+
+    return { success: true, _message: 'file uploaded', data };
   }
 }

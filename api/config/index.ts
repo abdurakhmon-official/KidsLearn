@@ -55,6 +55,30 @@ export default merge(
       issuer: process.env.JWT_ISSUER || 'kidslearn-api',
       audience: process.env.JWT_AUDIENCE || 'kidslearn-app',
     },
+
+    publicApiUrl: (process.env.PUBLIC_API_URL || `http://localhost:${Number(process.env.PORT) || 3000}${process.env.API_ROOT || '/api/v1'}`).replace(/\/+$/, ''),
+
+    tts: {
+      provider: (process.env.TTS_PROVIDER || (process.env.AZURE_SPEECH_KEY ? 'azure' : 'none')) as 'azure' | 'none',
+      azure: {
+        key: process.env.AZURE_SPEECH_KEY || '',
+        region: process.env.AZURE_SPEECH_REGION || 'westeurope',
+      },
+
+      voices: {
+        uz: process.env.TTS_VOICE_UZ || 'uz-UZ-MadinaNeural',
+        ru: process.env.TTS_VOICE_RU || 'ru-RU-SvetlanaNeural',
+        en: process.env.TTS_VOICE_EN || 'en-US-JennyNeural',
+      } as Record<string, string>,
+
+      rate: process.env.TTS_RATE || '-8%',
+      pitch: process.env.TTS_PITCH || '+4%',
+
+      maxChars: Number(process.env.TTS_MAX_CHARS) || 400,
+
+      hourlyBudget: Number(process.env.TTS_HOURLY_BUDGET) || 500,
+      folder: 'tts',
+    },
     AWS_REGION: process.env.AWS_REGION || 'eu-central-1',
     AWS_S3_BUCKET: process.env.AWS_S3_BUCKET || '',
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',

@@ -3,6 +3,7 @@
  */
 
 export * from "./activity";
+export * from "./audio";
 export * from "./auth";
 export * from "./award";
 export * from "./child";

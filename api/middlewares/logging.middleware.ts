@@ -5,7 +5,6 @@ export const logging = () => {
   return (req: Request, res: Response, next: (err: any) => any) => {
     res.once('finish', () => {
       if (req.method !== 'OPTIONS') {
-        // Bola sessiyasida kim ishlatayotgani ko'rinib tursin: bola (ota-onasi).
         const label = req.child
           ? `${req.child.fullName} (${req.user?.email})`
           : req.user
@@ -15,7 +14,7 @@ export const logging = () => {
         const method = yellow(req.method.padEnd(1));
         const url = req.url;
         const status = res.statusCode >= 200 && res.statusCode <= 299 ? green(`${res.statusCode}`) : red(`${res.statusCode}`);
-        // Kuzatuv id'si logda ham bo'lsin — xato javobidagi id bilan mos keladi.
+
         const trace = req.requestId ? ` (${req.requestId})` : '';
         console.log(user, status, method, url + trace);
       }

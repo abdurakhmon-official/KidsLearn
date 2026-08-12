@@ -1,11 +1,13 @@
 import { Response } from 'express';
 import { S3Service } from '@/services/s3.service';
 import { Authenticate } from '@/modules/auth';
-import { Authorized } from '../middlewares/auth.middleware';
+import { AdminOnly, Authorized } from '../middlewares/auth.middleware';
 import { Res } from '@tsed/common';
 import { Controller, Inject } from '@tsed/di';
-import { QueryParams, PathParams, BodyParams } from '@tsed/platform-params';
+import { MulterOptions, MultipartFile, type PlatformMulterFile } from '@tsed/platform-multer';
+import { QueryParams, PathParams } from '@tsed/platform-params';
 import { Get, Post } from '@tsed/schema';
+import { MAX_UPLOAD_BYTES } from '@/utils/constants';
 
 @Controller('/s3')
 export class AwsController {
@@ -33,8 +35,9 @@ export class AwsController {
   }
 
   @Post('/:folder/upload')
-  @Authorized(Authenticate())
-  async upload(@PathParams('folder') folder: string, @BodyParams('UploadFiles') file: any) {
+  @Authorized(AdminOnly())
+  @MulterOptions({ limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } })
+  async upload(@PathParams('folder') folder: string, @MultipartFile('file') file: PlatformMulterFile) {
     return await this.s3Service.upload(folder, file);
   }
 }

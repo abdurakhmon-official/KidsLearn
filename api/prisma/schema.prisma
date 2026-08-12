@@ -51,6 +51,7 @@ model Child {
   stats          ChildStats?
   lessonProgress LessonProgress[]
   gameSessions   GameSession[]
+  gameRounds     GameRound[]
   awards         Award[]
   dailyActivity  DailyActivity[]
   notifications  Notification[]
@@ -67,6 +68,7 @@ model Category {
   description String?
   icon        String?
   color       String?
+  audioUrl    String?
   order       Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -138,6 +140,7 @@ model Game {
   category Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   items    GameItem[]
   sessions GameSession[]
+  rounds   GameRound[]
 
   @@index([categoryId])
   @@index([ageGroup, active])
@@ -222,6 +225,34 @@ model GameSession {
   @@map("game_sessions")
 }
 
+/// Boshlangan o'yin raundi.
+///
+/// Ikki vazifasi bor. Birinchisi — `PUZZLE` va `MEMORY` taxtasini **server**
+/// yasab, uni shu yerda saqlaydi: shundagina bola yuborgan harakatlarni qayta
+/// o'ynatib, haqiqatan yechganini tekshirish mumkin. Ilgari taxta brauzerda
+/// aralashtirilardi va server g'alaba haqidagi da'voni tekshira olmasdi.
+///
+/// Ikkinchisi — `submittedAt` raundni bir marta yopadi, ya'ni bitta natijani
+/// qayta-qayta yuborib ochko yig'ib bo'lmaydi.
+model GameRound {
+  id          String    @id @default(cuid())
+  childId     String
+  gameId      String
+  /// Raundga tushgan savollar — `submit` dagi javoblar shu ro'yxat bilan tekshiriladi.
+  itemIds     Json
+  /// `PUZZLE` uchun bo'laklar tartibi, `MEMORY` uchun kartochka yuzlari. Boshqa turlarda bo'sh.
+  layout      Json?
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  game  Game  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([childId, createdAt])
+  @@index([gameId])
+  @@map("game_rounds")
+}
+
 model ChildStats {
   childId          String    @id
   totalPoints      Int       @default(0)
@@ -299,6 +330,48 @@ model RevokedToken {
   @@map("revoked_tokens")
 }
 
+/// Interfeys iboralari uchun yozib olingan ovoz. Dars/o'yin audiosi o'z
+/// ustunlarida yashaydi (`lessons.audioUrl`, `game_items.promptAudio`, …) —
+/// bu jadval ustun biriktirib bo'lmaydigan matnlar uchun: "Yangi mukofot!",
+/// "Salom!" kabi tarjima kalitlari.
+model PhraseAudio {
+  id         String       @id @default(cuid())
+  key        String
+  locale     String       @db.VarChar(5)
+  text       String
+  url        String
+  source     AUDIO_SOURCE @default(RECORDED)
+  durationMs Int?
+  active     Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([key, locale])
+  @@index([locale, active])
+  @@map("phrase_audio")
+}
+
+/// TTS generatsiyasining doimiy keshi. Kalit — matn+til+ovoz xeshi, shuning
+/// uchun har bir ibora umri davomida bir marta generatsiya qilinadi va
+/// keyin doim bir xil eshitiladi.
+model TtsCache {
+  hash       String   @id
+  text       String
+  locale     String   @db.VarChar(5)
+  provider   String
+  voice      String
+  url        String
+  key        String
+  durationMs Int?
+  bytes      Int?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@index([locale])
+  @@index([lastUsedAt])
+  @@map("tts_cache")
+}
+
 enum USER_ROLE {
   ADMIN
   PARENT
@@ -314,6 +387,11 @@ enum MEDIA_TYPE {
   IMAGE
   VIDEO
   AUDIO
+}
+
+enum AUDIO_SOURCE {
+  RECORDED
+  TTS
 }
 
 enum GAME_TYPE {

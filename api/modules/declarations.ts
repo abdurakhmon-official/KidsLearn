@@ -31,6 +31,17 @@ declare global {
       AWS_ACCESS_KEY_ID?: string;
       AWS_SECRET_ACCESS_KEY?: string;
       AWS_S3_BUCKET?: string;
+      PUBLIC_API_URL?: string;
+      TTS_PROVIDER?: string;
+      AZURE_SPEECH_KEY?: string;
+      AZURE_SPEECH_REGION?: string;
+      TTS_VOICE_UZ?: string;
+      TTS_VOICE_RU?: string;
+      TTS_VOICE_EN?: string;
+      TTS_RATE?: string;
+      TTS_PITCH?: string;
+      TTS_MAX_CHARS?: string;
+      TTS_HOURLY_BUDGET?: string;
     }
   }
 }

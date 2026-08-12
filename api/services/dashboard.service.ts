@@ -100,7 +100,17 @@ export class DashboardService {
     const today = dateOnly();
     const chartStart = startOfRange(ADMIN_CHART_RANGE_DAYS);
 
-    const [parents, admins, children, lessons, games, mediaAssets, sessions, activeToday, recentPoints] = await prisma.$transaction(
+    const [
+      parents, 
+      admins, 
+      children, 
+      lessons, 
+      games, 
+      mediaAssets, 
+      sessions, 
+      activeToday, 
+      recentPoints
+    ] = await prisma.$transaction(
       [
         prisma.user.count({ where: { role: 'PARENT' } }),
         prisma.user.count({ where: { role: 'ADMIN' } }),

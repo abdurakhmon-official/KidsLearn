@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import rateLimit, { Options } from 'express-rate-limit';
-import { AUTH_RATE_LIMIT, GLOBAL_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from '@/utils/constants';
+import { Request } from 'express';
+import { AUDIO_RATE_LIMIT, AUTH_RATE_LIMIT, GLOBAL_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from '@/utils/constants';
 
 const handler: Options['handler'] = (_req, res, _next, options) => {
   res.status(options.statusCode).json({
@@ -26,4 +28,15 @@ export const authRateLimit = () =>
     ...base,
     limit: AUTH_RATE_LIMIT,
     skipSuccessfulRequests: true,
+  });
+
+export const audioRateLimit = () =>
+  rateLimit({
+    ...base,
+    limit: AUDIO_RATE_LIMIT,
+    keyGenerator: (req) => {
+      const token = (req as Request).token;
+
+      return token ? `t:${createHash('sha1').update(token).digest('hex')}` : `ip:${req.ip}`;
+    },
   });

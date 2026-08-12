@@ -27,8 +27,6 @@ export class AuthMiddleware implements MiddlewareMethods {
 
     const role = req.auth!.role;
 
-    // Bola tokeni hech qachon admin huquqini bermaydi. Qurilma bolaning
-    // qo'lida bo'ladi — ota-onasi ADMIN bo'lsa ham sessiya CHILD bo'lib qoladi.
     if (role !== AUTH_ROLE.CHILD && req.user!.isAdmin) {
       return true;
     }
@@ -103,7 +101,6 @@ export class AuthMiddleware implements MiddlewareMethods {
       },
     });
 
-    // Token berilgandan keyin profil o'chirilgan bo'lishi mumkin.
     if (!child || child.parentId !== parentId) {
       throw new Unauthorized('Child profile is no longer available');
     }

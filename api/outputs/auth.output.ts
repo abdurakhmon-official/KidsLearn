@@ -7,7 +7,6 @@ export const AuthUserOutputSchema = UserSchema.omit({ password: true }).extend({
   isAdmin: z.boolean(),
 });
 
-/** Bola profili yosh va yosh guruhi bilan — ikkalasi ham hisoblanadi, saqlanmaydi. */
 export const ChildProfileOutputSchema = ChildSchema.extend({
   age: z.number().int().nonnegative(),
   ageGroup: AGE_GROUPSchema,

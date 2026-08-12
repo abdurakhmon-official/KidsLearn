@@ -1,7 +1,6 @@
 import { MEDAL_TYPE } from '@/generated/prisma';
 import { AwardDraft, AwardRule } from '@/types/award';
 
-// rules for awards
 export const AWARD_RULES: AwardRule[] = [
   {
     code: 'FIRST_LESSON',

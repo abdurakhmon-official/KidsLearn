@@ -1,6 +1,5 @@
 import { NOTIFICATION_TYPE, Prisma } from '@/generated/prisma';
 
-/** Yozilishidan oldingi bildirishnoma — `NotificationService.push()` shuni oladi. */
 export type NotificationDraft = {
   userId: string;
   childId?: string | null;
@@ -10,7 +9,6 @@ export type NotificationDraft = {
   data?: Prisma.InputJsonValue;
 };
 
-/** Medal haqida xabar yozish uchun yetarli ma'lumot. */
 export type NotifiableAward = {
   code: string;
   title: string;
@@ -18,5 +16,4 @@ export type NotifiableAward = {
   icon?: string | null;
 };
 
-/** `sortBy` da ruxsat etilgan ustunlar. */
 export const NOTIFICATION_SORT_KEYS = ['createdAt', 'readAt', 'type'] as const;

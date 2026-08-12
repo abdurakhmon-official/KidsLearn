@@ -9,6 +9,9 @@ import { z } from 'zod';
 const WARNING = '// WARNING: Do not change this file manually. Use yarn generate:types from the api project to update it';
 const OUTPUT_DIR_UI = '../ui/types';
 
+const isZodSchema = (value: unknown): value is z.Schema =>
+  Boolean(value && typeof value === 'object' && (value as { _def?: { typeName?: string } })._def?.typeName);
+
 if (existsSync(`${OUTPUT_DIR_UI}/input`)) {
   rmSync(`${OUTPUT_DIR_UI}/input`, { recursive: true });
 }
@@ -23,6 +26,10 @@ async function generateInputTypes() {
   const types: any[] = [];
   for (let key of Object.keys(inputSchemas)) {
     const schema = (inputSchemas as any)[key];
+
+    if (!isZodSchema(schema)) {
+      continue;
+    }
 
     const name = key.replace('Schema', '');
     const tsType = zodToTs(schema as z.Schema);
@@ -72,6 +79,10 @@ async function generateOutputTypes() {
   for (let key of Object.keys(outputSchemas)) {
     const schema = (outputSchemas as any)[key];
 
+    if (!isZodSchema(schema)) {
+      continue;
+    }
+
     const name = key.replace('Schema', '');
     const tsType = zodToTs(schema as z.Schema);
     const typeAlias = createTypeAlias(tsType.node, name);
@@ -90,4 +101,3 @@ async function generateOutputTypes() {
 generateInputTypes();
 generateModelsTypes();
 generateOutputTypes();
-

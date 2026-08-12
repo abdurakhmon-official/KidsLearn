@@ -1,16 +1,7 @@
 import type { categoryPerformance } from '@/generated/prisma/sql';
 
-/**
- * `prisma/sql/categoryPerformance.sql` natijasi — tip qo'lda yozilmaydi,
- * `prisma generate --sql` uni bazadan chiqaradi. Agregatlar (`correct`,
- * `total`, `sessions`) SQL bo'yicha `null` bo'lishi mumkin.
- */
 export type CategoryPerformanceRow = categoryPerformance.Result;
 
-/**
- * Normalizatsiya qilingan hol — "eng yaxshi fanlar" va "qiyin mavzular" shu
- * tipda qaytadi: agregatlar `0` ga tushirilgan, aniqlik foizi qo'shilgan.
- */
 export type CategoryPerformance = Omit<CategoryPerformanceRow, 'correct' | 'total' | 'sessions'> & {
   correct: number;
   total: number;
@@ -18,7 +9,6 @@ export type CategoryPerformance = Omit<CategoryPerformanceRow, 'correct' | 'tota
   accuracy: number;
 };
 
-/** Grafik qurish uchun `DailyActivity` dan o'qiladigan maydonlar. */
 export type DailyActivityRow = {
   date: Date;
   points: number;
@@ -27,7 +17,6 @@ export type DailyActivityRow = {
   activeSeconds: number;
 };
 
-/** Ota-ona grafigidagi bitta kun. */
 export type ChartDay = {
   date: string;
   points: number;

@@ -95,7 +95,6 @@ const GAMES = [
   },
 ];
 
-/** Bugungi sanadan berilgan yosh chiqadigan tug'ilgan sana. */
 function birthDateForAge(age: number): Date {
   const date = new Date();
   date.setFullYear(date.getFullYear() - age);
@@ -123,7 +122,7 @@ async function main() {
     update: {},
     create: {
       fullName: 'Malika Abduvaliyeva',
-      email: 'ota-ona@gmail.com',
+      email: 'parent@gmail.com',
       password,
       role: USER_ROLE.PARENT,
       phone: '+998901234567',
@@ -204,10 +203,6 @@ async function main() {
   for (const child of demoChildren) {
     await seedActivity(child.id, ageGroupOf(child.birthDate));
   }
-
-  console.info('Seed completed.');
-  console.info('Admin:    admin@kidslearn.uz / password123');
-  console.info('Ota-ona:  ota-ona@kidslearn.uz / password123');
 }
 
 async function seedActivity(childId: string, ageGroup: AGE_GROUP) {
