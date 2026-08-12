@@ -4,7 +4,7 @@ import { Inject, Injectable, InjectContext } from '@tsed/di';
 import { NotFound } from '@tsed/exceptions';
 import { Request } from 'express';
 import { PROGRESS_STATUS } from '@/generated/prisma';
-import { categoryPerformance as categoryPerformanceQuery } from '@/generated/prisma/sql';
+import { categoryPerformance as categoryPerformanceQuery } from '../generated/prisma/sql';
 import { LeaderboardSearch, LeaderboardSearchSchema, ParentDashboardQuery, ParentDashboardSchema } from '@/inputs/dashboard.input';
 import { ChildService } from '@/services/child.service';
 import { birthDateRangeFor, withAge } from '@/utils/age';

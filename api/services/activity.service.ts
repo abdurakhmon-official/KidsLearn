@@ -1,7 +1,7 @@
 import prisma from '@/modules/db';
 import { Inject, Injectable } from '@tsed/di';
 import { ChildStats, Prisma } from '@/generated/prisma';
-import { lockChildStats } from '@/generated/prisma/sql';
+import { lockChildStats } from '../generated/prisma/sql';
 import { ActivityInput } from '@/types/activity';
 import { dateOnly } from '@/utils/date';
 import { nextStreak } from '@/utils/streak';

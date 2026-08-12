@@ -1,4 +1,4 @@
-import type { categoryPerformance } from '@/generated/prisma/sql';
+import type { categoryPerformance } from '../generated/prisma/sql';
 
 export type CategoryPerformanceRow = categoryPerformance.Result;
 
