@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useMyProgressQuery } from "@/store/api/progress-api";
 import { useAppSelector } from "@/store/hooks";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 
 const TILES = [
   {
@@ -30,20 +30,24 @@ const TILES = [
 
 export default function PlayHomePage() {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
   const child = useAppSelector((state) => state.auth.child);
   const { data: progress } = useMyProgressQuery();
 
-  // Bola o'qiy olmaydi — kirganda ismini aytib salomlashamiz.
   useEffect(() => {
-    if (child?.fullName) speak(`Salom, ${child.fullName}!`, locale);
-  }, [child?.fullName, locale]);
+    if (!child?.fullName) return;
+
+    speaker.sayAll([
+      { phraseKey: "play.greeting", text: t("play.greeting") },
+      { text: child.fullName },
+    ]);
+  }, [child?.fullName, speaker, t]);
 
   return (
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="font-heading text-4xl font-bold text-balance md:text-5xl">
-          Salom, {child?.fullName}! 👋
+          {t("play.greeting")}, {child?.fullName}! 👋
         </h1>
         <p className="mt-3 text-xl text-muted-foreground tabular-nums">
           ⭐ {progress?.stats?.totalPoints ?? 0} · 🔥 {progress?.stats?.streakDays ?? 0}
@@ -55,7 +59,7 @@ export default function PlayHomePage() {
           <Link
             key={tile.href}
             href={tile.href}
-            onClick={() => speak(t(tile.titleKey), locale)}
+            onClick={() => speaker.sayKey(tile.titleKey)}
             className={`flex flex-col items-center justify-center gap-4 rounded-[--density-radius] p-8 ring-4 transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-8 active:scale-95 ${tile.className}`}
           >
             <span className="text-7xl md:text-8xl" aria-hidden>

@@ -1,9 +1,14 @@
 // WARNING: Do not change this file manually. Use yarn generate:types from the api project to update it
 
  export type SubmitGameInput = {
-    answers: {
+    roundId: string;
+    answers?: {
         itemId: string;
         value?: (string | null) | undefined;
     }[];
+    moves?: [
+        number,
+        number
+    ][];
     durationSeconds?: (number | undefined) | null;
 };

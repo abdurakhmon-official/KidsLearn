@@ -5,14 +5,14 @@ import Link from "next/link";
 import { CheckCircle2Icon } from "lucide-react";
 import { useLessonsForChildQuery } from "@/store/api/lesson-api";
 import { useCategoriesQuery } from "@/store/api/category-api";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import { cn } from "@/lib/utils";
 import { CardsSkeleton, EmptyState, ErrorState } from "@/components/shared/states";
 
 export default function ChildLessonsPage() {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
   const [categoryId, setCategoryId] = useState<string | undefined>();
 
   const { data: categories } = useCategoriesQuery();
@@ -20,7 +20,6 @@ export default function ChildLessonsPage() {
     categoryId ? { categoryId } : undefined,
   );
 
-  // Faqat bolaning ro'yxatida uchraydigan fanlar chip sifatida ko'rsatiladi.
   const visible = categories?.filter((category) => category._count.lessons > 0) ?? [];
 
   return (
@@ -45,7 +44,11 @@ export default function ChildLessonsPage() {
             <button
               key={category.id}
               type="button"
-              onClick={() => setCategoryId(category.id)}
+
+              onClick={() => {
+                setCategoryId(category.id);
+                speaker.sayText(category.name, category.audioUrl);
+              }}
               aria-pressed={categoryId === category.id}
               className={cn(
                 "flex items-center gap-1.5 rounded-full px-4 py-2.5 text-base font-medium transition-colors",
@@ -75,10 +78,10 @@ export default function ChildLessonsPage() {
               <Link
                 key={lesson.id}
                 href={`/play/lessons/${lesson.id}`}
-                onClick={() => speak(lesson.title, locale)}
+                onClick={() => speaker.sayText(lesson.title)}
                 className="group relative flex flex-col gap-3 overflow-hidden rounded-[--density-radius] bg-card p-5 ring-2 ring-border transition-transform hover:ring-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring active:scale-95"
               >
-                {/* Seed'da muqova rasmi yo'q — fan emoji'si rangli fonda fallback bo'ladi. */}
+
                 <span
                   className="flex h-28 items-center justify-center rounded-xl text-6xl"
                   style={{ backgroundColor: `color-mix(in oklch, ${lesson.category.color ?? "var(--muted)"} 15%, transparent)` }}

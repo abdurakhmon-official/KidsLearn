@@ -35,7 +35,6 @@ export const uz = {
   "common.deleteConfirmTitle": "Ishonchingiz komilmi?",
   "common.deleteConfirmBody": "Bu amalni orqaga qaytarib bo'lmaydi.",
 
-  // --- Navigatsiya --------------------------------------------------------
   "nav.dashboard": "Bosh sahifa",
   "nav.children": "Farzandlarim",
   "nav.notifications": "Bildirishnomalar",
@@ -49,13 +48,20 @@ export const uz = {
   "nav.lessons": "Darslar",
   "nav.games": "O'yinlar",
   "nav.media": "Media",
+  "nav.audio": "Ovoz",
+  "audio.title": "Interfeys ovozlari",
+  "audio.description": "Bolaga eshittiriladigan iboralar. Ovoz yozilmagan bo'lsa matn avtomatik o'qib beriladi.",
+  "audio.phrase": "Ibora",
+  "audio.text": "Matn",
+  "audio.recorded": "Yozib olingan ovoz",
+  "audio.generated": "Avtomatik o'qiladi",
+  "audio.localeHint": "Har bir til uchun alohida yoziladi",
   "nav.overview": "Umumiy",
   "nav.account": "Hisob",
   "nav.roleAdmin": "Administrator",
   "nav.roleParent": "Ota-ona",
   "nav.loggingOut": "Chiqilmoqda…",
 
-  // --- Auth ---------------------------------------------------------------
   "auth.signIn": "Kirish",
   "auth.signUp": "Ro'yxatdan o'tish",
   "auth.email": "Email",
@@ -69,13 +75,15 @@ export const uz = {
   "auth.passwordHint": "Kamida 6 ta belgi",
   "auth.passwordWarning": "Parol o'zgargach tizimdan chiqasiz va qaytadan kirasiz.",
 
-  // --- Bola profillari ----------------------------------------------------
   "child.selectTitle": "Kim o'ynayapti?",
   "child.selectSubtitle": "Profilingizni tanlang",
   "child.addChild": "Farzand qo'shish",
   "child.editChild": "Farzandni tahrirlash",
   "child.fullName": "Ismi",
   "child.birthDate": "Tug'ilgan sana",
+  "child.day": "Kun",
+  "child.month": "Oy",
+  "child.year": "Yil",
   "child.avatar": "Avatar",
   "child.age": "Yosh",
   "child.ageValue": "{age} yosh",
@@ -87,12 +95,10 @@ export const uz = {
   "child.backToParent": "Ota-onaga qaytish",
   "child.deleteWarning": "Farzand o'chirilsa uning barcha natijalari ham o'chadi.",
 
-  // --- Yosh guruhlari -----------------------------------------------------
   "ageGroup.AGE_1_2": "1–2 yosh",
   "ageGroup.AGE_3_4": "3–4 yosh",
   "ageGroup.AGE_5_7": "5–7 yosh",
 
-  // --- Darslar ------------------------------------------------------------
   "lesson.title": "Darslar",
   "lesson.name": "Dars nomi",
   "lesson.description": "Tavsif",
@@ -102,6 +108,9 @@ export const uz = {
   "lesson.video": "Video",
   "lesson.audio": "Audio",
   "lesson.images": "Rasmlar",
+  "lesson.tapToZoom": "Kattalashtirish uchun bosing",
+  "lesson.zoomIn": "Kattalashtirish",
+  "lesson.zoomOut": "Kichraytirish",
   "lesson.points": "Ball",
   "lesson.order": "Tartib",
   "lesson.markComplete": "Tugatdim",
@@ -112,7 +121,6 @@ export const uz = {
   "lesson.empty": "Bu yosh guruhi uchun hali dars yo'q",
   "lesson.mediaCount": "{count} ta fayl",
 
-  // --- O'yinlar -----------------------------------------------------------
   "game.title": "O'yinlar",
   "game.play": "O'ynash",
   "game.playAgain": "Yana o'ynash",
@@ -141,7 +149,7 @@ export const uz = {
   "game.memoryMoves": "Urinishlar: {moves}",
   "game.puzzleHint": "Ikkita bo'lakni bosib o'rnini almashtiring",
 
-  // --- Progress -----------------------------------------------------------
+  "play.greeting": "Salom",
   "progress.title": "Yutuqlarim",
   "progress.points": "Ball",
   "progress.stars": "Yulduzlar",
@@ -156,7 +164,6 @@ export const uz = {
   "progress.noActivity": "Hali faollik yo'q",
   "progress.certificate": "Sertifikat olish",
 
-  // --- Mukofotlar ---------------------------------------------------------
   "award.title": "Mukofotlar",
   "award.earned": "Qo'lga kiritilgan",
   "award.locked": "Qulflangan",
@@ -167,7 +174,6 @@ export const uz = {
   "medal.GOLD": "Oltin",
   "medal.DIAMOND": "Olmos",
 
-  // --- Ota-ona dashboardi -------------------------------------------------
   "dashboard.today": "Bugun",
   "dashboard.todayPoints": "Bugungi ball",
   "dashboard.todayGames": "O'yinlar",
@@ -183,7 +189,6 @@ export const uz = {
   "dashboard.selectChild": "Farzandni tanlang",
   "dashboard.noData": "Bu davr uchun ma'lumot yo'q",
 
-  // --- Bildirishnomalar ---------------------------------------------------
   "notification.title": "Bildirishnomalar",
   "notification.markAllRead": "Hammasini o'qilgan deb belgilash",
   "notification.unreadOnly": "Faqat o'qilmaganlar",
@@ -192,7 +197,6 @@ export const uz = {
   "notification.type.NEW_LESSON": "Yangi dars",
   "notification.type.AWARD_EARNED": "Mukofot",
 
-  // --- Admin --------------------------------------------------------------
   "admin.title": "Administrator paneli",
   "admin.parents": "Ota-onalar",
   "admin.admins": "Adminlar",
@@ -207,20 +211,48 @@ export const uz = {
   "admin.category": "Fan",
   "admin.slug": "Slug",
   "admin.icon": "Belgi",
+  "admin.iconPresets": "Tayyor belgilar",
   "admin.color": "Rang",
   "admin.correctAnswer": "To'g'ri javob",
   "admin.options": "Variantlar",
   "admin.addOption": "Variant qo'shish",
   "admin.questions": "Savollar",
   "admin.prompt": "Savol matni",
-  "admin.uploadHint": "Fayl manzilini (URL) kiriting",
+  "admin.promptImage": "Savol rasmi",
+  "admin.promptAudio": "Savol ovozi",
+  "admin.imageUrl": "Rasm manzili",
+  "admin.audioUrl": "Ovoz manzili",
+  "category.audio": "Fan nomi ovozi",
+  "category.audioHint": "Hali o'qiy olmaydigan bola fanni eshitib tanlaydi",
+  "admin.uploadHint": "Faylni yuklang yoki manzilini (URL) kiriting",
 
-  // --- Sozlamalar ---------------------------------------------------------
+  "upload.choose": "Fayl tanlash",
+  "upload.replace": "Almashtirish",
+  "upload.uploading": "Yuklanmoqda…",
+  "upload.remove": "Olib tashlash",
+  "upload.orUrl": "yoki manzilni kiriting",
+  "upload.tooLarge": "Fayl juda katta (25 MB gacha)",
+  "upload.wrongType": "Bu turdagi fayl qabul qilinmaydi",
+  "upload.failed": "Yuklab bo'lmadi",
+  "upload.audioHint": "Hayvon ovozi: mp3 yoki wav, 1–3 soniya",
+  "upload.previewFailed": "Faylni ko'rsatib bo'lmadi — manzilni tekshiring",
+  "upload.processing": "Tayyorlanmoqda…",
+  "upload.record": "Yozib olish",
+  "upload.stopRecording": "To'xtatish",
+  "upload.recording": "Yozilmoqda",
+  "recorder.denied": "Mikrofonga ruxsat berilmadi",
+  "recorder.failed": "Yozib bo'lmadi — mikrofonni tekshiring",
+
+  "media.type.IMAGE": "Rasm",
+  "media.type.VIDEO": "Video",
+  "media.type.AUDIO": "Ovoz",
+
   "settings.language": "Til",
   "settings.theme": "Mavzu",
   "settings.themeLight": "Yorug'",
   "settings.themeDark": "Qorong'i",
   "settings.themeSystem": "Tizim",
+
 } as const;
 
 export type Dictionary = Record<keyof typeof uz, string>;

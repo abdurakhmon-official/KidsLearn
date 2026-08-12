@@ -17,7 +17,6 @@ export const formatRelative = (value: string, locale: AppLocale) => {
   return formatDistanceToNowStrict(parseISO(value), { addSuffix: true, locale: DATE_LOCALES[locale] });
 }
 
-/** Lokalga mos oy nomlari (yanvardan dekabrgacha), bosh harfi katta. */
 export const monthNames = (locale: AppLocale) =>
   Array.from({ length: 12 }, (_, index) => {
     const name = format(new Date(2000, index, 1), "LLLL", { locale: DATE_LOCALES[locale] });

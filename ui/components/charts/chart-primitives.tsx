@@ -3,11 +3,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * Grafik o'lchamlari — har bir o'lchov butun ilova bo'ylab bitta rangda
- * qoladi. Rang o'lchovga biriktirilgan, seriyalar soniga emas: filtr
- * seriyani olib tashlasa, qolganlari qayta bo'yalmaydi.
- */
 export const CHART_COLORS = {
   points: "var(--chart-1)",
   lessons: "var(--chart-2)",
@@ -28,11 +23,6 @@ export const GRID_STYLE = {
   strokeDasharray: "3 3",
 } as const;
 
-/**
- * Legend har doim ko'rsatiladi (2+ seriya uchun) — dark rejimda qo'shni
- * ranglarning CVD ajralishi 6–8 oralig'ida, ya'ni rang yagona signal
- * bo'lib qololmaydi.
- */
 export function ChartLegend({
   items,
   className,
@@ -60,7 +50,6 @@ export function ChartLegend({
 
 type TooltipRow = { name: string; value: number | string; color?: string };
 
-/** shadcn `Card` uslubidagi tooltip — recharts'ning standarti tema bilmaydi. */
 export function ChartTooltipCard({ title, rows }: { title: ReactNode; rows: TooltipRow[] }) {
   return (
     <div className="rounded-lg bg-popover px-3 py-2 text-xs shadow-md ring-1 ring-border">
@@ -82,7 +71,6 @@ export function ChartTooltipCard({ title, rows }: { title: ReactNode; rows: Tool
   );
 }
 
-/** Grafik idishi: sarlavha, legend va aniq balandlik. */
 export function ChartFrame({
   title,
   action,
@@ -107,7 +95,7 @@ export function ChartFrame({
         </div>
       )}
       {legend}
-      {/* ResponsiveContainer ota konteynerdan balandlik oladi. */}
+
       <div className={height}>{children}</div>
     </div>
   );

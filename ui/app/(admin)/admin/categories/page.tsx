@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,11 +12,14 @@ import {
   useUpdateCategoryMutation,
 } from "@/store/api/category-api";
 import { applyServerErrors } from "@/lib/form";
+import { CATEGORY_PRESETS, DEFAULT_CATEGORY_PRESET, nextCategoryPreset } from "@/lib/category-presets";
+import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/provider";
 import type { Category } from "@/types/api";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/shared/states";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { MediaUpload } from "@/components/shared/media-upload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +36,11 @@ const schema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
+  audioUrl: z
+    .string()
+    .url("Manzil noto'g'ri")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   order: z.coerce.number().int().min(0),
   active: z.boolean(),
 });
@@ -41,7 +49,6 @@ type Values = z.input<typeof schema>;
 
 export default function AdminCategoriesPage() {
   const t = useT();
-  // Admin nofaol fanlarni ham ko'rishi kerak.
   const { data, isLoading, isError, refetch } = useCategoriesQuery({ all: true });
 
   const [createCategory, { isLoading: creating }] = useCreateCategoryMutation();
@@ -54,28 +61,54 @@ export default function AdminCategoriesPage() {
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", description: "", icon: "", color: "#6d51ec", order: 0, active: true },
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: "",
+      icon: DEFAULT_CATEGORY_PRESET.icon,
+      color: DEFAULT_CATEGORY_PRESET.color,
+      audioUrl: "",
+      order: 0,
+      active: true,
+    },
   });
+
+  const categoriesRef = useRef<Category[] | undefined>(undefined);
+
+  useEffect(() => {
+    categoriesRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (!open) return;
+
+    const preset = editing
+      ? DEFAULT_CATEGORY_PRESET
+      : nextCategoryPreset(categoriesRef.current?.map((item) => item.icon) ?? []);
 
     form.reset({
       name: editing?.name ?? "",
       slug: editing?.slug ?? "",
       description: editing?.description ?? "",
-      icon: editing?.icon ?? "",
-      color: editing?.color ?? "#6d51ec",
+      icon: editing?.icon ?? preset.icon,
+      color: editing?.color ?? preset.color,
+      audioUrl: editing?.audioUrl ?? "",
       order: editing?.order ?? 0,
       active: editing?.active ?? true,
     });
   }, [open, editing, form]);
 
+  const selectedIcon = form.watch("icon");
+
+  const pickPreset = (preset: (typeof CATEGORY_PRESETS)[number]) => {
+    form.setValue("icon", preset.icon, { shouldDirty: true });
+    form.setValue("color", preset.color, { shouldDirty: true });
+  };
+
   const onSubmit = form.handleSubmit(async (values) => {
     const payload = {
       ...values,
       order: Number(values.order),
-      // Bo'sh `slug` yuborilmasin — server uni `name` dan hosil qiladi.
       slug: values.slug?.trim() ? values.slug : undefined,
     };
 
@@ -231,6 +264,47 @@ export default function AdminCategoriesPage() {
               <div className="space-y-2">
                 <Label htmlFor="c-order">{t("lesson.order")}</Label>
                 <Input id="c-order" type="number" min={0} {...form.register("order")} />
+              </div>
+            </div>
+
+            <MediaUpload
+              id="c-audio"
+              kind="audio"
+              folder="categories"
+              label={t("category.audio")}
+              hint={t("category.audioHint")}
+              value={form.watch("audioUrl")}
+              onChange={(url) => form.setValue("audioUrl", url, { shouldValidate: true, shouldDirty: true })}
+            />
+            {error("audioUrl") && <p className="text-xs text-destructive">{error("audioUrl")}</p>}
+
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{t("admin.iconPresets")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {CATEGORY_PRESETS.map((preset) => {
+                  const selected = selectedIcon === preset.icon;
+
+                  return (
+                    <button
+                      key={preset.icon}
+                      type="button"
+                      aria-label={preset.icon}
+                      aria-pressed={selected}
+                      onClick={() => pickPreset(preset)}
+                      className={cn(
+                        "flex size-9 items-center justify-center rounded-md border text-lg transition-colors",
+                        selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-muted",
+                      )}
+                      style={{
+                        backgroundColor: selected
+                          ? undefined
+                          : `color-mix(in oklch, ${preset.color} 12%, transparent)`,
+                      }}
+                    >
+                      {preset.icon}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

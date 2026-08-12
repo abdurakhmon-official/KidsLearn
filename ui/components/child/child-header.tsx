@@ -9,10 +9,6 @@ import { useChildMode } from "@/hooks/use-child-mode";
 import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 
-/**
- * Bola rejimidagi yagona navigatsiya. Minimal: ism, ball, streak va chiqish.
- * "Orqaga" doim chapda yuqorida — bola uni bir joyda topishga o'rganadi.
- */
 export function ChildHeader() {
   const t = useT();
   const pathname = usePathname();

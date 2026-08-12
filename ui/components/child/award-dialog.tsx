@@ -1,26 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import type { Award } from "@/types/api";
 import { MedalCoin } from "@/components/shared/badges";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-/**
- * Yangi medal olinganda chiqadigan tabrik. Dars va o'yin ikkalasi ham
- * `awards[]` qaytaradi, shuning uchun bitta komponent.
- */
 export function AwardDialog({ awards, onClose }: { awards: Award[]; onClose: () => void }) {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
 
   const open = awards.length > 0;
 
   useEffect(() => {
-    if (open) speak(`${t("award.newAward")} ${awards[0].title}`, locale);
-  }, [open, awards, locale, t]);
+    if (open) speaker.sayText(`${t("award.newAward")} ${awards[0].title}`);
+  }, [open, awards, speaker, t]);
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>

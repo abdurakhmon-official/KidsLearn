@@ -50,6 +50,9 @@ export const GAME_TYPES: GameType[] = [
 export const MEDIA_TYPES: MediaType[] = ["IMAGE", "VIDEO", "AUDIO"];
 export const MEDAL_TYPES: MedalType[] = ["BRONZE", "SILVER", "GOLD", "DIAMOND"];
 
+export const UPLOAD_FOLDERS = ["games", "lessons", "categories", "phrases", "avatars"] as const;
+export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
+
 export type AccessToken = {
   accessToken: string;
   tokenType: "Bearer";
@@ -136,6 +139,7 @@ export type Category = {
   description: string | null;
   icon: string | null;
   color: string | null;
+  audioUrl: string | null;
   order: number;
   active: boolean;
   createdAt: string;
@@ -314,7 +318,10 @@ export type PlayItem = {
   createdAt: string;
 };
 
+export type GameMove = [number, number];
+
 export type PlayRound = {
+  roundId: string;
   game: {
     id: string;
     code: GameType;
@@ -324,6 +331,8 @@ export type PlayRound = {
     config: GameConfig | null;
   };
   items: PlayItem[];
+
+  layout: number[] | string[] | null;
   count: number;
   child: { id: string; fullName: string };
 };
@@ -551,6 +560,31 @@ export type MediaAsset = {
 
 export type RemoveMediaResult = { key: string };
 
+export type AudioSource = "RECORDED" | "TTS";
+
+export type PhraseAudio = {
+  id: string;
+  key: string;
+  locale: string;
+  text: string;
+  url: string;
+  source: AudioSource;
+  durationMs: number | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UpsertPhraseAudioInput = {
+  key: string;
+  locale: string;
+  text: string;
+  url: string;
+  source?: AudioSource;
+  durationMs?: number | null;
+  active?: boolean;
+};
+
 export type S3Policy = {
   policy: Record<string, string>;
   removeAuthKey: string;
@@ -601,6 +635,10 @@ export type UserFilters = {
 
 export type MediaFilters = {
   type?: MediaType;
+};
+
+export type PhraseAudioFilters = {
+  locale?: string;
 };
 
 export type NotificationFilters = {

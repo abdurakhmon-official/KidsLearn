@@ -3,21 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2Icon, RotateCcwIcon } from "lucide-react";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import { cn } from "@/lib/utils";
 import type { PlayItem, SubmitGameResult } from "@/types/api";
 import { AwardDialog } from "@/components/child/award-dialog";
 import { Stars } from "@/components/shared/badges";
 import { Button } from "@/components/ui/button";
 
-/**
- * Natija ekrani. To'g'ri javoblar **faqat shu yerda** ochiladi — server
- * `results[]` bilan qaytargandan keyin.
- *
- * Xato javob qizil emas, qahrabo rangda: 3 yoshli bolaga bu jazo emas,
- * "yana urinib ko'r" degan taklif.
- */
 export function GameResult({
   result,
   items,
@@ -28,14 +21,14 @@ export function GameResult({
   onRestart: () => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
   const [awardsOpen, setAwardsOpen] = useState(true);
 
   const { session, results } = result;
 
   useEffect(() => {
-    speak(`${t("game.resultTitle")} ${session.correctCount}`, locale);
-  }, [session.correctCount, locale, t]);
+    speaker.sayText(`${t("game.resultTitle")} ${session.correctCount}`);
+  }, [session.correctCount, speaker, t]);
 
   const labelFor = (itemId: string, value: string | null) => {
     const item = items.find((entry) => entry.id === itemId);

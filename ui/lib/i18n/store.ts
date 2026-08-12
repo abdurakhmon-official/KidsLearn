@@ -14,12 +14,6 @@ export const LOCALE_LABELS: Record<Locale, string> = {
 const isLocale = (value: string | undefined): value is Locale =>
   Boolean(value) && (LOCALES as readonly string[]).includes(value!);
 
-/**
- * Til cookie'da yashaydi — ya'ni React'dan tashqaridagi holat.
- * `useSyncExternalStore` aynan shu holat uchun mo'ljallangan: effekt ichida
- * `setState` chaqirib kaskad render hosil qilmaydi va SSR uchun alohida
- * snapshot beradi.
- */
 const listeners = new Set<() => void>();
 
 export function subscribeLocale(listener: () => void) {
@@ -32,7 +26,6 @@ export function getLocaleSnapshot(): Locale {
   return isLocale(stored) ? stored : DEFAULT_LOCALE;
 }
 
-/** Server cookie'ni ko'rmaydi — birinchi render doim default bilan ketadi. */
 export function getServerLocaleSnapshot(): Locale {
   return DEFAULT_LOCALE;
 }

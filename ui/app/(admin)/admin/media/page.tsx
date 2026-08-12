@@ -60,6 +60,10 @@ export default function AdminMediaPage() {
     type: type === ALL ? undefined : (type as MediaType),
   });
 
+  const mediaTypeOptions = MEDIA_TYPES.map((value) => ({ value, label: t(`media.type.${value}`) }));
+
+  const typeOptions = [{ value: ALL, label: t("common.all") }, ...mediaTypeOptions];
+
   const [registerMedia, { isLoading: registering }] = useRegisterMediaMutation();
   const [removeMedia, { isLoading: deleting }] = useRemoveMediaMutation();
 
@@ -112,15 +116,15 @@ export default function AdminMediaPage() {
               setType(value ?? ALL);
               resetPage();
             }}
+            items={typeOptions}
           >
             <SelectTrigger className="w-36" aria-label={t("common.status")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-              {MEDIA_TYPES.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
+              {typeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -169,7 +173,7 @@ export default function AdminMediaPage() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary">{asset.type}</Badge>
+                            <Badge variant="secondary">{t(`media.type.${asset.type}`)}</Badge>
                           </TableCell>
                           <TableCell className="text-right tabular-nums">{formatBytes(asset.size)}</TableCell>
                           <TableCell className="text-muted-foreground">
@@ -212,6 +216,7 @@ export default function AdminMediaPage() {
             <div className="space-y-2">
               <Label>{t("common.status")}</Label>
               <Select
+                items={mediaTypeOptions}
                 value={form.watch("type")}
                 onValueChange={(value) => form.setValue("type", (value ?? "IMAGE") as MediaType)}
               >
@@ -219,9 +224,9 @@ export default function AdminMediaPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {MEDIA_TYPES.map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {value}
+                  {mediaTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

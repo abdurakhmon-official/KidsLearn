@@ -6,11 +6,6 @@ import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
-/**
- * Qidiruv + filtr slotlari. Debounce chaqiruvchi tomonda
- * (`useDebouncedValue`) — bu komponent boshqariladigan input sifatida
- * ishlaydi, shunda "tozalash" tugmasi darhol ta'sir qiladi.
- */
 export function DataToolbar({
   search,
   onSearchChange,

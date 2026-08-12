@@ -1,38 +1,40 @@
 "use client";
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle2Icon, Loader2Icon, Volume2Icon } from "lucide-react";
+import { CheckCircle2Icon, Loader2Icon, Volume2Icon, ZoomInIcon } from "lucide-react";
 import { useLessonQuery, useSaveLessonProgressMutation } from "@/store/api/lesson-api";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import type { Award } from "@/types/api";
 import { AwardDialog } from "@/components/child/award-dialog";
+import { ImageLightbox, type LightboxImage } from "@/components/shared/image-lightbox";
 import { CardsSkeleton, ErrorState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
 
-/** Video ko'rilishi shu oraliqda bir marta serverga yoziladi. */
 const PROGRESS_INTERVAL_MS = 10_000;
 
 export default function ChildLessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
 
   const { data: lesson, isLoading, isError, refetch } = useLessonQuery(id);
   const [saveProgress, { isLoading: saving }] = useSaveLessonProgressMutation();
 
   const [awards, setAwards] = useState<Award[]>([]);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const lastSentAt = useRef(0);
 
   const progress = lesson?.progress?.[0];
   const completed = progress?.status === "COMPLETED" || justCompleted;
 
   useEffect(() => {
-    if (lesson?.title) speak(lesson.title, locale);
-  }, [lesson?.title, locale]);
+    if (lesson?.title) speaker.sayText(lesson.title);
+  }, [lesson?.title, speaker]);
 
-  /** Video oqayotganda vaqti-vaqti bilan ko'rilgan foizni yuboradi. */
+  useEffect(() => () => speaker.stop(), [speaker]);
+
   const handleTimeUpdate = useCallback(
     (event: React.SyntheticEvent<HTMLVideoElement>) => {
       const video = event.currentTarget;
@@ -67,6 +69,12 @@ export default function ChildLessonPage({ params }: { params: Promise<{ id: stri
   const audios = lesson.media.filter((item) => item.type === "AUDIO");
   const videos = lesson.media.filter((item) => item.type === "VIDEO");
 
+  const gallery: LightboxImage[] = [
+    ...(lesson.coverImage ? [{ id: "cover", url: lesson.coverImage, caption: lesson.title }] : []),
+    ...images.map((item) => ({ id: item.id, url: item.url, caption: item.caption })),
+  ];
+  const galleryOffset = lesson.coverImage ? 1 : 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3">
@@ -81,7 +89,9 @@ export default function ChildLessonPage({ params }: { params: Promise<{ id: stri
           variant="secondary"
           size="icon-lg"
           className="size-14 shrink-0 rounded-2xl"
-          onClick={() => speak(`${lesson.title}. ${lesson.description ?? ""}`, locale)}
+          onClick={() =>
+            speaker.sayText(`${lesson.title}. ${lesson.description ?? ""}`, lesson.audioUrl)
+          }
           aria-label={t("game.listenAgain")}
         >
           <Volume2Icon className="size-6" />
@@ -89,6 +99,26 @@ export default function ChildLessonPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {lesson.description && <p className="text-xl leading-relaxed">{lesson.description}</p>}
+
+      {lesson.coverImage && (
+        <button
+          type="button"
+          onClick={() => setViewerIndex(0)}
+          className="relative block w-full overflow-hidden rounded-[--density-radius] ring-4 ring-primary/50 transition-transform hover:ring-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring active:scale-[0.99]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lesson.coverImage} alt={lesson.title} className="aspect-video w-full object-cover" />
+
+          <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
+            {t("lesson.coverImage")}
+          </span>
+
+          <span className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-sm font-medium">
+            <ZoomInIcon className="size-4" />
+            {t("lesson.tapToZoom")}
+          </span>
+        </button>
+      )}
 
       {lesson.videoUrl && (
         <video
@@ -117,10 +147,22 @@ export default function ChildLessonPage({ params }: { params: Promise<{ id: stri
 
       {images.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
-          {images.map((item) => (
+          {images.map((item, position) => (
             <figure key={item.id} className="overflow-hidden rounded-[--density-radius] bg-card ring-2 ring-border">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt={item.caption ?? ""} className="w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setViewerIndex(galleryOffset + position)}
+                className="relative block w-full transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring active:scale-[0.98]"
+                aria-label={item.caption || t("lesson.tapToZoom")}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.url} alt={item.caption ?? ""} className="aspect-4/3 w-full object-cover" />
+
+                <span className="absolute bottom-2 right-2 flex size-10 items-center justify-center rounded-full bg-background/90">
+                  <ZoomInIcon className="size-5" />
+                </span>
+              </button>
+
               {item.caption && (
                 <figcaption className="px-4 py-2 text-base text-muted-foreground">{item.caption}</figcaption>
               )}
@@ -142,6 +184,13 @@ export default function ChildLessonPage({ params }: { params: Promise<{ id: stri
           </Button>
         )}
       </div>
+
+      <ImageLightbox
+        images={gallery}
+        index={viewerIndex}
+        onIndexChange={setViewerIndex}
+        onClose={() => setViewerIndex(null)}
+      />
 
       <AwardDialog awards={awards} onClose={() => setAwards([])} />
     </div>

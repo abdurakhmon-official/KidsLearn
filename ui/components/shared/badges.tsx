@@ -5,10 +5,6 @@ import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 import type { AgeGroup, MedalType } from "@/types/api";
 
-/**
- * `/15` fon + to'liq rang matn + `/30` halqa — bu naqsh ikkala temada ham
- * kontrastni saqlaydi, chunki uchala qiymat bitta token'dan chiqadi.
- */
 const AGE_STYLES: Record<AgeGroup, string> = {
   AGE_1_2: "bg-age-1-2/15 text-age-1-2 ring-age-1-2/30",
   AGE_3_4: "bg-age-3-4/15 text-age-3-4 ring-age-3-4/30",
@@ -54,12 +50,6 @@ export function MedalBadge({ medal, className }: { medal: MedalType; className?:
   );
 }
 
-/**
- * Medal doirasi. `icon` — API'dan keladigan emoji (`🎓`, `🏆`, `💎`);
- * rang esa token'dan, halqa va yorug'lik sifatida.
- *
- * Qulflangani o'chirilmaydi — bola nimaga intilishini ko'rishi kerak.
- */
 export function MedalCoin({
   medal,
   icon,
@@ -95,7 +85,6 @@ export function MedalCoin({
   );
 }
 
-/** 0–3 yulduz. Rang faqat yagona signal bo'lmasin deb son ham beriladi. */
 export function Stars({
   value,
   max = 3,

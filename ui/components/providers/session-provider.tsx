@@ -8,13 +8,6 @@ import { getToken, setSession } from "@/lib/session";
 import { isChildSession } from "@/types/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Sahifa yangilanganda sessiyani tiklaydi: cookie'da token bo'lsa
- * `GET /auth/me` chaqiriladi va Redux to'ldiriladi.
- *
- * `kl_role` cookie'si ham shu yerda haqiqatga moslanadi — u `middleware.ts`
- * uchun yagona manba, shuning uchun serverdagi rol bilan farq qilib qolmasin.
- */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
   const initialized = useAppSelector((state) => state.auth.initialized);
@@ -29,7 +22,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
 
     if (isError) {
-      // 401 bo'lsa `lib/axios.ts` allaqachon sessiyani tozalab, login'ga yuboradi.
       dispatch(clearAuth());
       return;
     }
@@ -42,7 +34,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // `children` bu yerda kerak emas — ro'yxat `useListChildrenQuery` dan keladi.
     const { children: _ignored, isAdmin, ...user } = data;
     void _ignored;
     dispatch(setParentSession({ user, isAdmin }));

@@ -6,6 +6,7 @@
     description?: ((string | undefined) | null) | undefined;
     icon?: ((string | undefined) | null) | undefined;
     color?: ((string | undefined) | null) | undefined;
+    audioUrl?: ((string | undefined) | null) | undefined;
     order?: number | undefined;
     active?: boolean | undefined;
 };

@@ -13,6 +13,7 @@
     stats: any | null;
     lessonProgress: any[];
     gameSessions: any[];
+    gameRounds: any[];
     awards: any[];
     dailyActivity: any[];
     notifications: any[];

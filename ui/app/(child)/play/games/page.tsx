@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useGamesForChildQuery } from "@/store/api/game-api";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import type { GameType } from "@/types/api";
 import { Stars } from "@/components/shared/badges";
 import { CardsSkeleton, EmptyState, ErrorState } from "@/components/shared/states";
 
-/** Har bir o'yin turining emoji belgisi — seed'da muqova rasmi yo'q. */
 const GAME_EMOJI: Record<GameType, string> = {
   COLOR_MATCH: "🎨",
   ANIMAL_SOUND: "🐻",
@@ -20,7 +19,7 @@ const GAME_EMOJI: Record<GameType, string> = {
 
 export default function ChildGamesPage() {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
   const { data, isLoading, isError, refetch } = useGamesForChildQuery();
 
   return (
@@ -46,7 +45,7 @@ export default function ChildGamesPage() {
                     event.preventDefault();
                     return;
                   }
-                  speak(game.title, locale);
+                  speaker.sayText(game.title);
                 }}
                 className={`flex flex-col gap-3 rounded-[--density-radius] bg-card p-5 ring-2 ring-border transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring ${
                   playable ? "hover:ring-primary active:scale-95" : "pointer-events-none opacity-50"

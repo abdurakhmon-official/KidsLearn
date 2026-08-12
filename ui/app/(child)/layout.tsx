@@ -5,8 +5,7 @@ import { ChildHeader } from "@/components/child/child-header";
 export default function ChildLayout({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      {/* `data-mode="child"` zichlik token'larini yoqadi: kattaroq radius,
-          matn va boshqaruv elementlari. */}
+
       <div
         data-mode="child"
         className="flex min-h-screen flex-col bg-[radial-gradient(ellipse_at_top,var(--accent),var(--background))]"

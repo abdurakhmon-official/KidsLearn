@@ -15,7 +15,6 @@ import { axisTickInterval, formatAxisDate } from "@/lib/format";
 import type { AdminChartDay } from "@/types/api";
 import { AXIS_STYLE, CHART_COLORS, ChartLegend, ChartTooltipCard, GRID_STYLE } from "./chart-primitives";
 
-/** 14 kunlik umumiy faollik. Ustunlar orasida 2px bo'shliq — CVD uchun ham foydali. */
 export function AdminActivityChart({ days }: { days: AdminChartDay[] }) {
   const t = useT();
   const { locale } = useLocale();

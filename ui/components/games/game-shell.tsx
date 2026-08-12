@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useT } from "@/lib/i18n/provider";
 
-/** O'yin ustidagi progress chizig'i va sanoq. */
 export function GameShell({
   title,
   index,

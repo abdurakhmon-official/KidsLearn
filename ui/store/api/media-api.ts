@@ -1,6 +1,6 @@
 import { baseApi } from "./base-api";
 import { buildListParams } from "@/lib/query-params";
-import type { ListQuery, MediaAsset, MediaFilters, Paged, RemoveMediaResult } from "@/types/api";
+import type { ListQuery, MediaAsset, MediaFilters, Paged, RemoveMediaResult, UploadFolder } from "@/types/api";
 import type { RegisterMediaInput } from "@/types/input/RegisterMediaInput";
 
 export const mediaApi = baseApi.injectEndpoints({
@@ -10,13 +10,21 @@ export const mediaApi = baseApi.injectEndpoints({
       providesTags: ["Media"],
     }),
 
-    /** S3 ga yuklash tugagach registrga yozadi. */
+    uploadMedia: build.mutation<MediaAsset, { folder: UploadFolder; file: File }>({
+      query: ({ folder, file }) => {
+        const data = new FormData();
+        data.append("file", file);
+
+        return { url: `/s3/${folder}/upload`, method: "POST", data };
+      },
+      invalidatesTags: ["Media", "Dashboard"],
+    }),
+
     registerMedia: build.mutation<MediaAsset, RegisterMediaInput>({
       query: (data) => ({ url: "/media", method: "POST", data }),
       invalidatesTags: ["Media", "Dashboard"],
     }),
 
-    /** Registrdan o'chiradi va S3 obyekt kalitini qaytaradi. */
     removeMedia: build.mutation<RemoveMediaResult, string>({
       query: (id) => ({ url: `/media/${id}`, method: "DELETE" }),
       invalidatesTags: ["Media", "Dashboard"],
@@ -24,4 +32,9 @@ export const mediaApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useMediaPaginatedQuery, useRegisterMediaMutation, useRemoveMediaMutation } = mediaApi;
+export const {
+  useMediaPaginatedQuery,
+  useUploadMediaMutation,
+  useRegisterMediaMutation,
+  useRemoveMediaMutation,
+} = mediaApi;

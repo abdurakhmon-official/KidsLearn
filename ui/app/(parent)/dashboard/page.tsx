@@ -46,7 +46,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Farzandi yo'q ota-onaga API 404 qaytaradi — bu xato emas, holat.
   if (isError && !children?.length) {
     return (
       <EmptyState
@@ -81,7 +80,7 @@ export default function DashboardPage() {
             <Select
               value={childId ?? data.child.id}
               onValueChange={(value) => setChildId(value ?? undefined)}
-              // `items` bo'lmasa Base UI trigger'da label o'rniga xom qiymatni (child.id) ko'rsatadi.
+
               items={children.map((child) => ({
                 value: child.id,
                 label: [child.avatar, child.fullName].filter(Boolean).join(" "),

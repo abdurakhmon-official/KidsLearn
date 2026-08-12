@@ -1,58 +1,44 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FlagIcon } from "lucide-react";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import { cn } from "@/lib/utils";
-import type { GameConfig, PlayItem } from "@/types/api";
+import type { GameConfig, GameMove, PlayItem } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
-/**
- * Rasm `rows × cols` bo'laklarga bo'linadi. Rasm kesilmaydi —
- * `background-position` bilan har bir katak o'z qismini ko'rsatadi.
- *
- * Boshqaruv **tap-to-swap**: ikkita bo'lakni bosib o'rnini almashtirish.
- * Kichik bolalar uchun drag-and-drop'dan ancha oson.
- */
 export function PuzzleGame({
   item,
   config,
+  layout,
   onAnswer,
 }: {
   item: PlayItem;
   config: GameConfig | null;
-  onAnswer: (value: string | null) => void;
+
+  layout: number[] | null;
+  onAnswer: (value: string | null, moves: GameMove[]) => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
 
   const rows = Math.max(2, Math.min(5, Number(config?.rows) || 3));
   const cols = Math.max(2, Math.min(5, Number(config?.cols) || 3));
   const count = rows * cols;
 
-  // Aralashtirish: hech bo'lmaganda bitta bo'lak joyida bo'lmasin.
-  // Lazy initializer — effekt ichida `setState` chaqirib kaskad render
-  // hosil qilmaydi. Komponent har savolda `key` bilan qayta yaratiladi.
-  const [order, setOrder] = useState<number[]>(() => {
-    const shuffled = Array.from({ length: count }, (_, index) => index);
-
-    do {
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-    } while (shuffled.every((value, index) => value === index));
-
-    return shuffled;
-  });
+  const [order, setOrder] = useState<number[]>(
+    () => layout ?? Array.from({ length: count }, (_, index) => index),
+  );
 
   const [picked, setPicked] = useState<number | null>(null);
   const [solved, setSolved] = useState(false);
 
+  const moves = useRef<GameMove[]>([]);
+
   useEffect(() => {
-    speak(t("game.puzzleHint"), locale);
-  }, [locale, t]);
+    speaker.sayKey("game.puzzleHint");
+  }, [speaker]);
 
   const swap = (position: number) => {
     if (solved) return;
@@ -70,21 +56,19 @@ export function PuzzleGame({
     const next = [...order];
     [next[picked], next[position]] = [next[position], next[picked]];
 
+    moves.current.push([picked, position]);
+
     setOrder(next);
     setPicked(null);
 
     if (next.every((value, index) => value === index)) {
       setSolved(true);
-      speak(t("game.resultTitle"), locale);
-      // `options` da bitta element bor — yechilgan holatning qiymati.
-      setTimeout(() => onAnswer(item.options[0]?.value ?? null), 900);
+      speaker.sayKey("game.resultTitle");
+
+      setTimeout(() => onAnswer(item.options[0]?.value ?? null, moves.current), 900);
     }
   };
 
-  /**
-   * Rasm bo'lmasa (seed'da yo'q) gradient bo'laklar ishlatiladi — o'yin
-   * baribir o'ynaladi, faqat surat o'rniga rangli naqsh bo'ladi.
-   */
   const tileStyle = useMemo(() => {
     return (piece: number): React.CSSProperties => {
       const row = Math.floor(piece / cols);
@@ -140,7 +124,8 @@ export function PuzzleGame({
           variant="outline"
           size="lg"
           className="h-14 w-full text-lg"
-          onClick={() => onAnswer(null)}
+
+          onClick={() => onAnswer(null, moves.current)}
         >
           <FlagIcon data-icon="inline-start" />
           {t("game.giveUp")}

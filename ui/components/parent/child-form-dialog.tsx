@@ -10,6 +10,7 @@ import { CHILD_AVATARS, childSchema, type ChildValues } from "@/lib/validation/c
 import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 import type { ChildProfile } from "@/types/api";
+import { BirthDateSelect } from "@/components/shared/birth-date-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-/** `birthDate` ISO bo'lib keladi, `<input type="date">` esa `YYYY-MM-DD` kutadi. */
 const toDateInput = (value?: string) => (value ? value.slice(0, 10) : "");
 
 export function ChildFormDialog({
@@ -46,7 +46,6 @@ export function ChildFormDialog({
     defaultValues: { fullName: "", birthDate: "", avatar: CHILD_AVATARS[0] },
   });
 
-  // Dialog qayta ochilganda forma tanlangan bolaga moslanadi.
   useEffect(() => {
     if (!open) return;
 
@@ -98,12 +97,15 @@ export function ChildFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="child-birth">{t("child.birthDate")}</Label>
-            <Input
+            <BirthDateSelect
               id="child-birth"
-              type="date"
-              max={new Date().toISOString().slice(0, 10)}
-              aria-invalid={Boolean(form.formState.errors.birthDate)}
-              {...form.register("birthDate")}
+              value={form.watch("birthDate")}
+
+              onChange={(value) =>
+                form.setValue("birthDate", value, { shouldValidate: form.formState.isSubmitted })
+              }
+              invalid={Boolean(form.formState.errors.birthDate)}
+              disabled={isLoading}
             />
             {form.formState.errors.birthDate && (
               <p className="text-xs text-destructive">{form.formState.errors.birthDate.message}</p>

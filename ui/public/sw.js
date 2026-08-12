@@ -1,15 +1,3 @@
-/**
- * KidsLearn service worker.
- *
- * Ikki xil strategiya:
- *  - statik fayllar (`/_next/static`, ikonkalar) — cache-first, ular
- *    o'zgarmaydi (hash bilan nomlangan);
- *  - navigatsiya — network-first, offline'da zaxira sahifa.
- *
- * API javoblari **umuman cache qilinmaydi**: ular `Authorization` header
- * bilan keladi va bir bolaning ma'lumoti boshqasiga ko'rinib qolishi mumkin.
- */
-
 const VERSION = "v1";
 const STATIC_CACHE = `kidslearn-static-${VERSION}`;
 const PAGES_CACHE = `kidslearn-pages-${VERSION}`;
@@ -48,7 +36,6 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Boshqa domenlar (jumladan API) — service worker aralashmaydi.
   if (url.origin !== self.location.origin) return;
 
   if (isStaticAsset(url)) {

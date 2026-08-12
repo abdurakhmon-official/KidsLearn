@@ -44,6 +44,18 @@ export default function AdminLessonsPage() {
     from: from || undefined,
   });
 
+  const ageOptions = [
+    { value: ALL, label: t("common.all") },
+    ...AGE_GROUPS.map((group) => ({ value: group, label: t(`ageGroup.${group}`) })),
+  ];
+  const categoryOptions = [
+    { value: ALL, label: t("common.all") },
+    ...(categories ?? []).map((category) => ({
+      value: category.id,
+      label: `${category.icon ?? ""} ${category.name}`.trim(),
+    })),
+  ];
+
   const [deleteLesson, { isLoading: deleting }] = useDeleteLessonMutation();
 
   const confirmDelete = async () => {
@@ -76,15 +88,15 @@ export default function AdminLessonsPage() {
                 setAgeGroup(value ?? ALL);
                 resetPage();
               }}
+              items={ageOptions}
             >
               <SelectTrigger className="w-36" aria-label={t("lesson.ageGroup")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {AGE_GROUPS.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {t(`ageGroup.${group}`)}
+                {ageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -96,15 +108,15 @@ export default function AdminLessonsPage() {
                 setCategoryId(value ?? ALL);
                 resetPage();
               }}
+              items={categoryOptions}
             >
               <SelectTrigger className="w-40" aria-label={t("lesson.category")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

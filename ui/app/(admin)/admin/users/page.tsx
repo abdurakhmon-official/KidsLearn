@@ -42,6 +42,12 @@ export default function AdminUsersPage() {
     role: role === ALL ? undefined : (role as UserRole),
   });
 
+  const roleOptions = [
+    { value: ALL, label: t("common.all") },
+    { value: "PARENT", label: t("admin.parents") },
+    { value: "ADMIN", label: t("admin.admins") },
+  ];
+
   const [updateStatus] = useUpdateUserStatusMutation();
   const [deleteUser, { isLoading: deleting }] = useDeleteUserMutation();
 
@@ -74,14 +80,17 @@ export default function AdminUsersPage() {
               setRole(value ?? ALL);
               resetPage();
             }}
+            items={roleOptions}
           >
             <SelectTrigger className="w-36" aria-label={t("admin.role")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-              <SelectItem value="PARENT">{t("admin.parents")}</SelectItem>
-              <SelectItem value="ADMIN">{t("admin.admins")}</SelectItem>
+              {roleOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         }

@@ -21,4 +21,8 @@ export const dashboardApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useParentDashboardQuery, useAdminDashboardQuery, useLeaderboardQuery } = dashboardApi;
+export const { 
+  useParentDashboardQuery, 
+  useAdminDashboardQuery, 
+  useLeaderboardQuery 
+} = dashboardApi;

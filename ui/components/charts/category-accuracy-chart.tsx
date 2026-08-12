@@ -16,13 +16,6 @@ import { useT } from "@/lib/i18n/provider";
 import type { CategoryPerformance } from "@/types/api";
 import { AXIS_STYLE, ChartTooltipCard, GRID_STYLE } from "./chart-primitives";
 
-/**
- * Fanlar bo'yicha aniqlik. Bitta o'lchov — shuning uchun legend kerak emas
- * (sarlavha o'zi nomlaydi); har bir ustunda to'g'ridan-to'g'ri foiz yoziladi.
- *
- * Rang fanning o'zinikidan (`category.color`) olinadi, palitradan emas —
- * bu yerda rang identifikatsiya emas, fanning belgisi.
- */
 export function CategoryAccuracyChart({ rows }: { rows: CategoryPerformance[] }) {
   const t = useT();
 

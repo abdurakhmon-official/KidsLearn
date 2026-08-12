@@ -20,8 +20,6 @@ export function CertificateButton({
     setBusy(true);
 
     try {
-      // jsPDF ~350KB — faqat kerak bo'lganda yuklanadi, boshlang'ich
-      // bundle'ga qo'shilmaydi.
       const { downloadCertificate } = await import("@/lib/certificate");
       downloadCertificate(progress, awardCount);
     } finally {

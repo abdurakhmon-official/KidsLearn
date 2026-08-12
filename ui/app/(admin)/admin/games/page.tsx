@@ -41,6 +41,22 @@ export default function AdminGamesPage() {
     categoryId: categoryId === ALL ? undefined : categoryId,
   });
 
+  const codeOptions = [
+    { value: ALL, label: t("common.all") },
+    ...GAME_TYPES.map((type) => ({ value: type, label: t(`game.type.${type}`) })),
+  ];
+  const ageOptions = [
+    { value: ALL, label: t("common.all") },
+    ...AGE_GROUPS.map((group) => ({ value: group, label: t(`ageGroup.${group}`) })),
+  ];
+  const categoryOptions = [
+    { value: ALL, label: t("common.all") },
+    ...(categories ?? []).map((category) => ({
+      value: category.id,
+      label: `${category.icon ?? ""} ${category.name}`.trim(),
+    })),
+  ];
+
   const [deleteGame, { isLoading: deleting }] = useDeleteGameMutation();
 
   const confirmDelete = async () => {
@@ -73,15 +89,15 @@ export default function AdminGamesPage() {
                 setCode(value ?? ALL);
                 resetPage();
               }}
+              items={codeOptions}
             >
               <SelectTrigger className="w-40" aria-label={t("nav.games")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {GAME_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {t(`game.type.${type}`)}
+                {codeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -93,15 +109,15 @@ export default function AdminGamesPage() {
                 setAgeGroup(value ?? ALL);
                 resetPage();
               }}
+              items={ageOptions}
             >
               <SelectTrigger className="w-36" aria-label={t("lesson.ageGroup")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {AGE_GROUPS.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {t(`ageGroup.${group}`)}
+                {ageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -113,15 +129,15 @@ export default function AdminGamesPage() {
                 setCategoryId(value ?? ALL);
                 resetPage();
               }}
+              items={categoryOptions}
             >
               <SelectTrigger className="w-40" aria-label={t("lesson.category")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

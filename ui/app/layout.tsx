@@ -6,6 +6,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { PwaProvider } from "@/components/providers/pwa-provider";
+import { AudioProvider } from "@/components/providers/audio-provider";
 import { LocaleProvider } from "@/lib/i18n/provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -31,9 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    // `suppressHydrationWarning` — next-themes serverda bilib bo'lmaydigan
-    // temani `<html>` ga birinchi bo'yoqdan oldin yozadi, bu esa server va
-    // klient markup'ini ataylab farqlantiradi.
+
     <html lang="uz" suppressHydrationWarning className={cn("h-full antialiased font-sans", inter.variable)}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
@@ -43,6 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 {children}
                 <Toaster position="top-right" />
                 <PwaProvider />
+                <AudioProvider />
               </TooltipProvider>
             </Providers>
           </LocaleProvider>

@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-/** `api/inputs/user.input.ts` ning nusxasi. */
 const schema = z.object({
   fullName: z.string().min(1, "Ism kiriting"),
   email: z.string().min(1, "Email kiriting").email("Email noto'g'ri"),
@@ -65,6 +64,11 @@ export function UserFormDialog({
   });
 
   const error = (name: keyof Values) => form.formState.errors[name]?.message;
+
+  const roleOptions = [
+    { value: "PARENT", label: t("admin.parents") },
+    { value: "ADMIN", label: t("admin.admins") },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -110,13 +114,17 @@ export function UserFormDialog({
             <Select
               value={form.watch("role")}
               onValueChange={(value) => form.setValue("role", (value ?? "PARENT") as Values["role"])}
+              items={roleOptions}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PARENT">{t("admin.parents")}</SelectItem>
-                <SelectItem value="ADMIN">{t("admin.admins")}</SelectItem>
+                {roleOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

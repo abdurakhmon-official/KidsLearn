@@ -11,6 +11,7 @@ import { useCategoriesQuery } from "@/store/api/category-api";
 import { applyServerErrors } from "@/lib/form";
 import { useT } from "@/lib/i18n/provider";
 import { AGE_GROUPS, GAME_TYPES, type GameDetail, type GameType } from "@/types/api";
+import { MediaUpload } from "@/components/shared/media-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,8 @@ const optionSchema = z.object({
   value: z.string().min(1, "Qiymat kiriting"),
   label: z.string().optional(),
   image: optionalUrl,
+
+  audio: optionalUrl,
   color: z.string().optional(),
 });
 
@@ -44,7 +47,7 @@ const itemSchema = z
     order: z.coerce.number().int().min(0),
     active: z.boolean(),
   })
-  // Server ham shu qoidani tekshiradi — mos kelmasa 400 qaytaradi.
+
   .refine((item) => item.options.some((option) => option.value === item.correctValue), {
     message: "To'g'ri javob variantlar ichida bo'lishi kerak",
     path: ["correctValue"],
@@ -101,6 +104,18 @@ export function GameForm({ game }: { game?: GameDetail }) {
   const items = useFieldArray({ control: form.control, name: "items" });
   const code = form.watch("code");
 
+  const typeOptions = GAME_TYPES.map((type) => ({ value: type, label: t(`game.type.${type}`) }));
+
+  const ageOptions = AGE_GROUPS.map((group) => ({ value: group, label: t(`ageGroup.${group}`) }));
+
+  const categoryOptions = [
+    { value: NO_CATEGORY, label: t("common.none") },
+    ...(categories ?? []).map((category) => ({
+      value: category.id,
+      label: `${category.icon ?? ""} ${category.name}`.trim(),
+    })),
+  ];
+
   useEffect(() => {
     if (!game) return;
 
@@ -131,6 +146,7 @@ export function GameForm({ game }: { game?: GameDetail }) {
             value: option.value,
             label: option.label ?? "",
             image: option.image ?? "",
+            audio: option.audio ?? "",
             color: option.color ?? "",
           })),
           order: item.order,
@@ -142,7 +158,6 @@ export function GameForm({ game }: { game?: GameDetail }) {
   const onSubmit = form.handleSubmit(async (values) => {
     const { rows, cols, pairs, itemsPerRound, categoryId, ...fields } = values;
 
-    // `config` turga qarab yig'iladi — xom JSON muharriri emas.
     const config: Record<string, number> = {};
     if (values.code === "PUZZLE") {
       config.rows = Number(rows) || 3;
@@ -162,12 +177,12 @@ export function GameForm({ game }: { game?: GameDetail }) {
 
     try {
       if (game) {
-        // `items` yuborilsa server ro'yxatni to'liq almashtiradi.
         await updateGame({ id: game.id, data: payload }).unwrap();
       } else {
-        const created = await createGame(payload).unwrap();
-        router.replace(`/admin/games/${created.id}`);
+        await createGame(payload).unwrap();
       }
+
+      router.push("/admin/games");
     } catch (error) {
       applyServerErrors(error, form.setError);
     }
@@ -192,6 +207,7 @@ export function GameForm({ game }: { game?: GameDetail }) {
           <div className="space-y-2">
             <Label>{t("nav.games")}</Label>
             <Select
+              items={typeOptions}
               value={code}
               onValueChange={(value) => form.setValue("code", (value ?? "COLOR_MATCH") as GameType)}
             >
@@ -199,9 +215,9 @@ export function GameForm({ game }: { game?: GameDetail }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {GAME_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {t(`game.type.${type}`)}
+                {typeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -216,6 +232,7 @@ export function GameForm({ game }: { game?: GameDetail }) {
           <div className="space-y-2">
             <Label>{t("lesson.category")}</Label>
             <Select
+              items={categoryOptions}
               value={form.watch("categoryId")}
               onValueChange={(value) => form.setValue("categoryId", value ?? NO_CATEGORY)}
             >
@@ -223,10 +240,9 @@ export function GameForm({ game }: { game?: GameDetail }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_CATEGORY}>{t("common.none")}</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -236,6 +252,7 @@ export function GameForm({ game }: { game?: GameDetail }) {
           <div className="space-y-2">
             <Label>{t("lesson.ageGroup")}</Label>
             <Select
+              items={ageOptions}
               value={form.watch("ageGroup")}
               onValueChange={(value) => form.setValue("ageGroup", (value ?? "AGE_1_2") as Values["ageGroup"])}
             >
@@ -243,9 +260,9 @@ export function GameForm({ game }: { game?: GameDetail }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {AGE_GROUPS.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {t(`ageGroup.${group}`)}
+                {ageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -305,9 +322,39 @@ export function GameForm({ game }: { game?: GameDetail }) {
             <Input id="g-round" type="number" min={1} max={50} {...form.register("itemsPerRound")} />
           </div>
 
-          <div className="space-y-2 sm:col-span-3">
-            <Label htmlFor="g-audio">{t("lesson.audio")}</Label>
-            <Input id="g-audio" placeholder="https://…" {...form.register("instructionAudio")} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("nav.media")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("admin.uploadHint")}</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <MediaUpload
+              id="g-cover"
+              label={t("lesson.coverImage")}
+              kind="image"
+              folder="games"
+              value={form.watch("coverImage")}
+              onChange={(url) => form.setValue("coverImage", url, { shouldValidate: true, shouldDirty: true })}
+            />
+            {error("coverImage") && <p className="text-xs text-destructive">{error("coverImage")}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <MediaUpload
+              id="g-audio"
+              label={t("lesson.audio")}
+              kind="audio"
+              folder="games"
+              value={form.watch("instructionAudio")}
+              onChange={(url) =>
+                form.setValue("instructionAudio", url, { shouldValidate: true, shouldDirty: true })
+              }
+            />
+            {error("instructionAudio") && <p className="text-xs text-destructive">{error("instructionAudio")}</p>}
           </div>
         </CardContent>
       </Card>
@@ -362,7 +409,6 @@ export function GameForm({ game }: { game?: GameDetail }) {
   );
 }
 
-/** Bitta savol: prompt, variantlar massivi va ular ichidan to'g'ri javob. */
 function ItemEditor({
   index,
   form,
@@ -377,6 +423,10 @@ function ItemEditor({
 
   const currentOptions = form.watch(`items.${index}.options`) ?? [];
   const correctError = form.formState.errors.items?.[index]?.correctValue?.message;
+
+  const answerOptions = currentOptions
+    .filter((option) => option.value)
+    .map((option) => ({ value: option.value, label: option.label || option.value }));
 
   return (
     <div className="space-y-3 rounded-lg bg-muted/40 p-4">
@@ -397,15 +447,28 @@ function ItemEditor({
         </Button>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label className="text-xs">promptImage</Label>
-          <Input placeholder="https://…" {...form.register(`items.${index}.promptImage`)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">promptAudio</Label>
-          <Input placeholder="https://…" {...form.register(`items.${index}.promptAudio`)} />
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <MediaUpload
+          id={`item-${index}-image`}
+          label={t("admin.promptImage")}
+          kind="image"
+          folder="games"
+          value={form.watch(`items.${index}.promptImage`)}
+          onChange={(url) =>
+            form.setValue(`items.${index}.promptImage`, url, { shouldValidate: true, shouldDirty: true })
+          }
+        />
+        <MediaUpload
+          id={`item-${index}-audio`}
+          label={t("admin.promptAudio")}
+          hint={t("upload.audioHint")}
+          kind="audio"
+          folder="games"
+          value={form.watch(`items.${index}.promptAudio`)}
+          onChange={(url) =>
+            form.setValue(`items.${index}.promptAudio`, url, { shouldValidate: true, shouldDirty: true })
+          }
+        />
       </div>
 
       <div className="space-y-2">
@@ -415,7 +478,7 @@ function ItemEditor({
             type="button"
             variant="ghost"
             size="xs"
-            onClick={() => options.append({ value: "", label: "", image: "", color: "" })}
+            onClick={() => options.append({ value: "", label: "", image: "", audio: "", color: "" })}
           >
             <PlusIcon data-icon="inline-start" />
             {t("admin.addOption")}
@@ -439,10 +502,35 @@ function ItemEditor({
               className="h-9 w-14 p-1"
               {...form.register(`items.${index}.options.${optionIndex}.color`)}
             />
-            <Input
-              placeholder="image URL"
-              className="min-w-40 flex-1"
-              {...form.register(`items.${index}.options.${optionIndex}.image`)}
+
+            <MediaUpload
+              kind="image"
+              folder="games"
+              compact
+              placeholder={t("admin.imageUrl")}
+              className="min-w-48 flex-1"
+              value={form.watch(`items.${index}.options.${optionIndex}.image`)}
+              onChange={(url) =>
+                form.setValue(`items.${index}.options.${optionIndex}.image`, url, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+            />
+
+            <MediaUpload
+              kind="audio"
+              folder="games"
+              compact
+              placeholder={t("admin.audioUrl")}
+              className="min-w-48 flex-1"
+              value={form.watch(`items.${index}.options.${optionIndex}.audio`)}
+              onChange={(url) =>
+                form.setValue(`items.${index}.options.${optionIndex}.audio`, url, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
             />
             <Button
               type="button"
@@ -460,8 +548,9 @@ function ItemEditor({
 
       <div className="space-y-1.5">
         <Label className="text-xs">{t("admin.correctAnswer")}</Label>
-        {/* Erkin matn emas — faqat mavjud variantlardan tanlanadi. */}
+
         <Select
+          items={answerOptions}
           value={form.watch(`items.${index}.correctValue`)}
           onValueChange={(value) =>
             form.setValue(`items.${index}.correctValue`, value ?? "", { shouldValidate: true })
@@ -471,13 +560,11 @@ function ItemEditor({
             <SelectValue placeholder={t("admin.correctAnswer")} />
           </SelectTrigger>
           <SelectContent>
-            {currentOptions
-              .filter((option) => option.value)
-              .map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label || option.value}
-                </SelectItem>
-              ))}
+            {answerOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {correctError && <p className="text-xs text-destructive">{correctError}</p>}

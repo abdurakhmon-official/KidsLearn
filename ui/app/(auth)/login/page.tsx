@@ -15,11 +15,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const DEMO_ACCOUNTS = [
-  { role: "Administrator", email: "admin@kidslearn.uz" },
-  { role: "Ota-ona", email: "ota-ona@kidslearn.uz" },
-];
-
 function LoginForm() {
   const searchParams = useSearchParams();
   const [login, { isLoading }] = useLoginMutation();
@@ -36,15 +31,9 @@ function LoginForm() {
       const token = await login(values).unwrap();
       await completeSignIn(token, searchParams.get("next"));
     } catch (error) {
-      // Maydonga tegishli bo'lmagan xatoni `lib/axios.ts` toast qiladi.
       applyServerErrors(error, form.setError);
     }
   });
-
-  const fill = (email: string) => {
-    form.setValue("email", email);
-    form.setValue("password", "password123");
-  };
 
   return (
     <Card>
@@ -107,17 +96,6 @@ function LoginForm() {
               Ro&apos;yxatdan o&apos;tish
             </Link>
           </p>
-
-          <div className="w-full rounded-lg bg-muted/60 p-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">Demo hisoblar (parol: password123)</p>
-            <div className="flex flex-wrap gap-2">
-              {DEMO_ACCOUNTS.map((account) => (
-                <Button key={account.email} type="button" variant="outline" size="xs" onClick={() => fill(account.email)}>
-                  {account.role}
-                </Button>
-              ))}
-            </div>
-          </div>
         </CardFooter>
       </form>
     </Card>
@@ -125,7 +103,6 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  // `useSearchParams` prerender paytida Suspense chegarasini talab qiladi.
   return (
     <Suspense fallback={null}>
       <LoginForm />

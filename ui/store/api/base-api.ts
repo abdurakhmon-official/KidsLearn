@@ -15,6 +15,7 @@ export const baseApi = createApi({
     "Award",
     "Notification",
     "Media",
+    "PhraseAudio",
     "User",
     "Dashboard",
     "Leaderboard",

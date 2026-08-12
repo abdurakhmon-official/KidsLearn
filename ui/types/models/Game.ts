@@ -18,4 +18,5 @@
     category: any | null;
     items: any[];
     sessions: any[];
+    rounds: any[];
 };

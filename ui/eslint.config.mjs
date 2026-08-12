@@ -5,15 +5,14 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+
   globalIgnores([
-    // Default ignores of eslint-config-next:
+
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // `api/generate-types.ts` yozadigan fayllar — qo'lda tahrirlanmaydi,
-    // shuning uchun ularni lint qilishdan ma'no yo'q (bog'lanishlar `any`).
+
     "types/input/**",
     "types/models/**",
     "types/output/**",

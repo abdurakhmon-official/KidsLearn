@@ -21,7 +21,6 @@ export function buildCertificate(progress: ProgressSummary, awardCount: number) 
   const height = doc.internal.pageSize.getHeight();
   const center = width / 2;
 
-  // Ikki qatlamli ramka
   doc.setDrawColor(109, 81, 236);
   doc.setLineWidth(2.5);
   doc.rect(10, 10, width - 20, height - 20);
@@ -51,7 +50,6 @@ export function buildCertificate(progress: ProgressSummary, awardCount: number) 
   doc.setLineWidth(0.4);
   doc.line(center - 55, 88, center + 55, 88);
 
-  // Ko'rsatkichlar
   const stats = [
     ["Ball", String(progress.stats?.totalPoints ?? 0)],
     ["Yulduz", String(progress.stats?.totalStars ?? 0)],

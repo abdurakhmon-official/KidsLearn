@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      {/* `data-mode="admin"` zich rejim: kichikroq radius, matn va boshqaruvlar. */}
+
       <div data-mode="admin" className="contents">
         <SidebarProvider>
           <AdminSidebar />

@@ -49,8 +49,6 @@ function Button({
   render,
   ...props
 }: useRender.ComponentProps<"button"> & VariantProps<typeof buttonVariants>) {
-  // `render` orqali <Link> kabi non-<button> element berilishi mumkin — u holda
-  // `type` atributi qo'yilmaydi (faqat native tugmaga tegishli).
   const isNativeButton =
     render === undefined ||
     (React.isValidElement(render) && render.type === "button")

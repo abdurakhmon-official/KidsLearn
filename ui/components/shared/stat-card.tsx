@@ -2,10 +2,6 @@ import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
-/**
- * Raqam ulkan, yorlig'i xira. `tabular-nums` majburiy — qiymat yangilanganda
- * raqamlar sakramaydi.
- */
 export function StatCard({
   label,
   value,

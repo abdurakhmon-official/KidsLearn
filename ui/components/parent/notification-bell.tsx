@@ -6,11 +6,9 @@ import { useNotificationsQuery } from "@/store/api/notification-api";
 import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 
-/** Header'dagi qo'ng'iroq — o'qilmaganlar soni bilan. */
 export function NotificationBell() {
   const t = useT();
 
-  // Faqat sanoq kerak, shuning uchun eng kichik sahifa so'raladi.
   const { data } = useNotificationsQuery(
     { page: 1, size: 1 },
     { pollingInterval: 60_000, refetchOnMountOrArgChange: true },

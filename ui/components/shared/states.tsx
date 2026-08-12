@@ -7,11 +7,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Bo'sh / yuklanmoqda / xato — uchalasi bir xil skeletda, shunda ekrandan
- * ekranga o'tganda joylashuv sakramaydi.
- */
-
 type StateProps = {
   icon?: ComponentType<{ className?: string }>;
   title: string;
@@ -60,7 +55,6 @@ export function ErrorState({ onRetry, ...props }: Partial<StateProps> & { onRetr
   );
 }
 
-/** Kartochka ro'yxati uchun skeleton — haqiqiy kartochka bilan bir o'lchamda. */
 export function CardsSkeleton({ count = 6, className }: { count?: number; className?: string }) {
   return (
     <div className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-3", className)}>
@@ -71,7 +65,6 @@ export function CardsSkeleton({ count = 6, className }: { count?: number; classN
   );
 }
 
-/** Jadval uchun skeleton. */
 export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
     <div className="space-y-2">

@@ -3,16 +3,7 @@ import { getLocale } from "@/lib/session";
 type Locale = "uz" | "en" | "ru";
 type Translations = Record<Locale, string>;
 
-/**
- * Backend har doim inglizcha `_message` qaytaradi (`api/services/*`,
- * `api/middlewares/error.middleware.ts`). Toast'ni chiqarishdan oldin shu yerda
- * tarjima qilamiz — chunki `lib/axios.ts` React daraxtidan tashqarida ishlaydi
- * va `useT()` ga kira olmaydi.
- *
- * Kalitlar kichik harfda saqlanadi, qidiruv `normalize()` orqali ketadi.
- */
 const MESSAGES: Record<string, Translations> = {
-  // ── Muvaffaqiyat ─────────────────────────────────────────────────────────
   "registered successfully": {
     uz: "Ro'yxatdan o'tdingiz",
     en: "Registered successfully",
@@ -91,6 +82,12 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Файл зарегистрирован",
   },
 
+  "file uploaded": {
+    uz: "Fayl yuklandi",
+    en: "File uploaded",
+    ru: "Файл загружен",
+  },
+
   "game created": {
     uz: "O'yin qo'shildi",
     en: "Game created",
@@ -139,7 +136,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Загружено",
   },
 
-  // ── Sessiya va ruxsat ────────────────────────────────────────────────────
   unauthorized: {
     uz: "Avval tizimga kiring",
     en: "Please sign in first",
@@ -176,7 +172,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Ваш аккаунт неактивен. Обратитесь к администратору.",
   },
 
-  // ── Autentifikatsiya ─────────────────────────────────────────────────────
   "email already exist": {
     uz: "Bu email allaqachon ro'yxatdan o'tgan",
     en: "This email is already registered",
@@ -201,7 +196,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Новый пароль должен отличаться от текущего",
   },
 
-  // ── Farzand rejimi ───────────────────────────────────────────────────────
   "already in a child session": {
     uz: "Siz allaqachon farzand rejimidasiz",
     en: "You are already in a child session",
@@ -232,7 +226,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Этот профиль ребёнка заблокирован",
   },
 
-  // ── Topilmadi / band ─────────────────────────────────────────────────────
   "child not found": {
     uz: "Farzand topilmadi",
     en: "Child not found",
@@ -311,7 +304,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Категория с таким названием или slug уже существует",
   },
 
-  // ── Kontent qoidalari ────────────────────────────────────────────────────
   "this game has no content yet": {
     uz: "Bu o'yinda hali savollar yo'q",
     en: "This game has no content yet",
@@ -354,7 +346,18 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Недопустимая папка",
   },
 
-  // ── Tizim xatolari ───────────────────────────────────────────────────────
+  "file is required": {
+    uz: "Fayl tanlanmagan",
+    en: "No file selected",
+    ru: "Файл не выбран",
+  },
+
+  "file storage is not configured on the server": {
+    uz: "Serverda fayl saqlash sozlanmagan",
+    en: "File storage is not configured on the server",
+    ru: "Хранилище файлов не настроено на сервере",
+  },
+
   "validation failed": {
     uz: "Ma'lumotlarni tekshiring",
     en: "Please check the submitted data",
@@ -385,7 +388,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Слишком много запросов. Повторите позже.",
   },
 
-  // ── Tarmoq (axios o'zi hosil qiladi, backend emas) ───────────────────────
   "network error": {
     uz: "Serverga ulanib bo'lmadi. Internetni tekshiring.",
     en: "Cannot reach the server. Check your connection.",
@@ -398,7 +400,6 @@ const MESSAGES: Record<string, Translations> = {
     ru: "Запрос отменён",
   },
 
-  // ── Zod'ning standart maydon xabarlari ───────────────────────────────────
   required: {
     uz: "Majburiy maydon",
     en: "Required",
@@ -436,12 +437,31 @@ const MESSAGES: Record<string, Translations> = {
   },
 };
 
-/**
- * Ichida son/nom bo'lgan xabarlar (`${count} notification(s) ...`) lug'atga
- * to'g'ridan-to'g'ri sig'maydi — ularni regex bilan tutamiz. Tarjimadagi
- * `{0}`, `{1}` — regex guruhlarining tartib raqami.
- */
 const PATTERNS: { match: RegExp; translations: Translations }[] = [
+  {
+    match: /^unsupported file type: (.+)$/i,
+    translations: {
+      uz: "Bu turdagi fayl qabul qilinmaydi ({0})",
+      en: "Unsupported file type: {0}",
+      ru: "Такой тип файла не поддерживается ({0})",
+    },
+  },
+  {
+    match: /^file is larger than (\d+) MB$/i,
+    translations: {
+      uz: "Fayl {0} MB dan katta",
+      en: "File is larger than {0} MB",
+      ru: "Файл больше {0} МБ",
+    },
+  },
+  {
+    match: /^folder must be one of: (.+)$/i,
+    translations: {
+      uz: "Papka quyidagilardan biri bo'lishi kerak: {0}",
+      en: "Folder must be one of: {0}",
+      ru: "Папка должна быть одной из: {0}",
+    },
+  },
   {
     match: /^this category still has (\d+) lesson\(s\)$/i,
     translations: {
@@ -506,7 +526,7 @@ const PATTERNS: { match: RegExp; translations: Translations }[] = [
       ru: "Сервер вернул ошибку",
     },
   },
-  // Zod'ning standart uzunlik/oraliq xabarlari.
+
   {
     match: /^string must contain at least (\d+) character\(s\)$/i,
     translations: {
@@ -554,7 +574,6 @@ const currentLocale = (): Locale => {
   return locale === "en" || locale === "ru" ? locale : "uz";
 };
 
-/** Backend xabarlari bosh harf/nuqta jihatidan bir xil emas — bir ko'rinishga keltiramiz. */
 const normalize = (message: string) => message.trim().toLowerCase();
 
 const fill = (template: string, groups: string[]) =>
@@ -568,8 +587,6 @@ export function translateServerMessage(message: string): string {
   const exact = MESSAGES[normalize(message)];
   if (exact) return exact[locale];
 
-  // Shablonlar asl matnga solishtiriladi (regexlar `i` bayrog'i bilan) — aks
-  // holda ushlangan qiymatlar (`P2014`, `GET`) kichik harfga tushib ketardi.
   for (const { match, translations } of PATTERNS) {
     const result = message.trim().match(match);
 
@@ -578,8 +595,6 @@ export function translateServerMessage(message: string): string {
     }
   }
 
-  // Lug'atda yo'q xabar inglizcha holicha chiqadi — bu bug, shuning uchun
-  // dev'da ko'rinib tursin.
   if (process.env.NODE_ENV === "development") {
     console.warn(`[i18n] tarjimasi yo'q server xabari: "${message}"`);
   }

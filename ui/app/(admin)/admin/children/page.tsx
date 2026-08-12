@@ -32,9 +32,13 @@ export default function AdminChildrenPage() {
     size,
     search: search || undefined,
     ageGroup: ageGroup === ALL ? undefined : (ageGroup as AgeGroup),
-    // Aniq yosh berilsa server uni `birthDate` oralig'iga aylantiradi.
     age: age === "" ? undefined : Number(age),
   });
+
+  const ageOptions = [
+    { value: ALL, label: t("common.all") },
+    ...AGE_GROUPS.map((group) => ({ value: group, label: t(`ageGroup.${group}`) })),
+  ];
 
   return (
     <>
@@ -52,15 +56,15 @@ export default function AdminChildrenPage() {
                 setAgeGroup(value ?? ALL);
                 resetPage();
               }}
+              items={ageOptions}
             >
               <SelectTrigger className="w-36" aria-label={t("lesson.ageGroup")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-                {AGE_GROUPS.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {t(`ageGroup.${group}`)}
+                {ageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -20,7 +20,6 @@ import { AdminActivityChart } from "@/components/charts/admin-activity-chart";
 import { ChartFrame } from "@/components/charts/chart-primitives";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-/** Yosh guruhi ranglari — badge'lardagi bilan bir xil token. */
 const AGE_BARS: Record<string, string> = {
   AGE_1_2: "bg-age-1-2",
   AGE_3_4: "bg-age-3-4",

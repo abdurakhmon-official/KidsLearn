@@ -8,15 +8,14 @@ export type QueryArgs = {
   method?: AxiosRequestConfig["method"];
   data?: unknown;
   params?: Record<string, unknown>;
+  silent?: boolean;
 };
 
 export const axiosBaseQuery = (): BaseQueryFn<QueryArgs, unknown, ApiError> => {
-  return async ({ url, method = "GET", data, params }) => {
+  return async ({ url, method = "GET", data, params, silent }) => {
     try {
-      const response = await api<ApiResponse<unknown>>({ url, method, data, params });
+      const response = await api<ApiResponse<unknown>>({ url, method, data, params, silent });
 
-      // logout / password kabi endpointlar `data` qaytarmaydi — RTK Query
-      // `undefined` ni na natija, na xato deb hisoblaydi, shuning uchun `null`.
       return { data: response.data?.data ?? null };
     } catch (error) {
       const axiosError = error as AxiosError<ApiError>;

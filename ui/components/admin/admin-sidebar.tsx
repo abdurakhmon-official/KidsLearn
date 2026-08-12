@@ -11,6 +11,7 @@ import {
   ShieldIcon,
   UserRoundIcon,
   UsersRoundIcon,
+  Volume2Icon
 } from "lucide-react";
 import { useT } from "@/lib/i18n/provider";
 import {
@@ -36,6 +37,7 @@ export function AdminSidebar() {
     { href: "/admin/lessons", label: t("nav.lessons"), icon: BookOpenIcon },
     { href: "/admin/games", label: t("nav.games"), icon: GamepadIcon },
     { href: "/admin/media", label: t("nav.media"), icon: ImageIcon },
+    { href: "/admin/audio", label: t("nav.audio"), icon: Volume2Icon },
   ];
 
   const people = [

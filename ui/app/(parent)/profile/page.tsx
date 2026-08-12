@@ -62,7 +62,6 @@ export default function ProfilePage() {
     try {
       await updatePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword }).unwrap();
 
-      // Server tokenni bekor qildi — sessiyani tozalab, qaytadan kirishga yuboramiz.
       clearSession();
       dispatch(clearAuth());
       dispatch(baseApi.util.resetApiState());

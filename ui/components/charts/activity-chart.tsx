@@ -23,10 +23,6 @@ import {
 
 type Measure = { key: keyof ChartDay & string; label: string; color: string };
 
-/**
- * Kunlik faollik. Nol qiymatli kunlar API'dan to'ldirilib keladi, shuning
- * uchun grafikda kun tushib qolmaydi.
- */
 export function ActivityChart({ days }: { days: ChartDay[] }) {
   const t = useT();
   const { locale } = useLocale();
@@ -37,8 +33,6 @@ export function ActivityChart({ days }: { days: ChartDay[] }) {
     { key: "gamesPlayed", label: t("dashboard.todayGames"), color: CHART_COLORS.games },
   ];
 
-  // Recharts `content` propi standart generiklarni kutadi, shuning uchun
-  // `value` bu yerda massiv ham bo'lishi mumkin — soniga keltiramiz.
   const renderTooltip = ({ active, payload, label }: TooltipContentProps) => {
     if (!active || !payload?.length) return null;
 
@@ -69,7 +63,6 @@ export function ActivityChart({ days }: { days: ChartDay[] }) {
             ))}
           </defs>
 
-          {/* Faqat gorizontal chiziqlar — vertikallari o'qishga xalaqit beradi. */}
           <CartesianGrid {...GRID_STYLE} vertical={false} />
 
           <XAxis

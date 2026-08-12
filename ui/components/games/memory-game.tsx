@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FlagIcon } from "lucide-react";
-import { useLocale, useT } from "@/lib/i18n/provider";
-import { speak } from "@/lib/speech";
+import { useT } from "@/lib/i18n/provider";
+import { useSpeaker } from "@/hooks/use-speaker";
 import { cn } from "@/lib/utils";
-import type { GameConfig, PlayItem } from "@/types/api";
+import type { GameMove, PlayItem } from "@/types/api";
 import { Button } from "@/components/ui/button";
-
-/** Kartochka mazmuni `options` dan olinadi; yetmasa shu to'plamdan to'ldiriladi. */
-const FALLBACK_FACES = ["🍎", "🐻", "⭐", "🚗", "🌸", "🐟", "🎈", "🍌", "🦋", "🌙", "🍇", "🐸"];
 
 const FLIP_BACK_MS = 800;
 
@@ -17,39 +14,27 @@ type Card = { id: number; face: string; matched: boolean };
 
 export function MemoryGame({
   item,
-  config,
+  layout,
   onAnswer,
 }: {
   item: PlayItem;
-  config: GameConfig | null;
-  onAnswer: (value: string | null) => void;
+
+  layout: string[] | null;
+  onAnswer: (value: string | null, moves: GameMove[]) => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
+  const speaker = useSpeaker();
 
-  const pairs = Math.max(2, Math.min(8, Number(config?.pairs) || 6));
-
-  // Lazy initializer — komponent har savolda `key` bilan qayta yaratiladi,
-  // shuning uchun effekt ichida qayta tiklash kerak emas.
-  const [cards, setCards] = useState<Card[]>(() => {
-    const optionFaces = item.options
-      .map((option) => option.label ?? option.image ?? "")
-      .filter((face) => face && face.length <= 4);
-
-    const faces = [...optionFaces, ...FALLBACK_FACES].slice(0, pairs);
-
-    return faces
-      .flatMap((face, index) => [
-        { id: index * 2, face, matched: false },
-        { id: index * 2 + 1, face, matched: false },
-      ])
-      .sort(() => Math.random() - 0.5);
-  });
+  const [cards, setCards] = useState<Card[]>(() =>
+    (layout ?? []).map((face, index) => ({ id: index, face, matched: false })),
+  );
 
   const [flipped, setFlipped] = useState<number[]>([]);
-  const [moves, setMoves] = useState(0);
+  const [moveCount, setMoveCount] = useState(0);
   const [locked, setLocked] = useState(false);
   const [solved, setSolved] = useState(false);
+
+  const moves = useRef<GameMove[]>([]);
 
   const flip = (index: number) => {
     if (locked || solved) return;
@@ -60,10 +45,12 @@ export function MemoryGame({
 
     if (next.length < 2) return;
 
-    setMoves((count) => count + 1);
+    setMoveCount((count) => count + 1);
     setLocked(true);
 
     const [first, second] = next;
+
+    moves.current.push([first, second]);
 
     if (cards[first].face === cards[second].face) {
       const updated = cards.map((card, position) =>
@@ -76,9 +63,9 @@ export function MemoryGame({
 
       if (updated.every((card) => card.matched)) {
         setSolved(true);
-        speak(t("game.resultTitle"), locale);
-        // `options` dagi yagona qiymat — "hammasi topildi" holati.
-        setTimeout(() => onAnswer(item.options[0]?.value ?? null), 900);
+        speaker.sayKey("game.resultTitle");
+
+        setTimeout(() => onAnswer(item.options[0]?.value ?? null, moves.current), 900);
       }
 
       return;
@@ -93,7 +80,7 @@ export function MemoryGame({
   return (
     <div className="space-y-6">
       <p className="text-center text-lg tabular-nums text-muted-foreground">
-        {t("game.memoryMoves", { moves })}
+        {t("game.memoryMoves", { moves: moveCount })}
       </p>
 
       <div className="mx-auto grid w-full max-w-md grid-cols-3 gap-3 sm:grid-cols-4">
@@ -126,7 +113,12 @@ export function MemoryGame({
       {solved ? (
         <p className="text-center font-heading text-2xl font-bold text-success">🎉 {t("game.resultTitle")}</p>
       ) : (
-        <Button variant="outline" size="lg" className="h-14 w-full text-lg" onClick={() => onAnswer(null)}>
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-14 w-full text-lg"
+          onClick={() => onAnswer(null, moves.current)}
+        >
           <FlagIcon data-icon="inline-start" />
           {t("game.giveUp")}
         </Button>

@@ -60,7 +60,7 @@ export function UserNav() {
 
   return (
     <DropdownMenu>
-      {/* Trigger dumaloq "pill": ochilganda fon va chevron burilishi bilan holatini ko'rsatadi. */}
+
       <DropdownMenuTrigger className="group flex items-center gap-2 rounded-full border border-transparent py-1 pr-1 pl-1 text-sm outline-none transition-colors hover:border-border hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:border-border data-popup-open:bg-muted sm:pr-2">
         <Avatar className="size-7">
           <AvatarFallback className="bg-primary/10 font-semibold text-primary">
@@ -79,7 +79,7 @@ export function UserNav() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" sideOffset={8} className="w-64 p-1.5">
-        {/* Hisob sarlavhasi — menyu elementi emas, shuning uchun klaviatura uni o'tkazib yuboradi. */}
+
         <div className="flex items-center gap-3 px-1.5 py-2">
           <Avatar className="size-9">
             <AvatarFallback className="bg-primary/10 font-semibold text-primary">
@@ -124,7 +124,6 @@ export function UserNav() {
 
         <DropdownMenuSeparator />
 
-        {/* `closeOnClick={false}` — so'rov ketayotganda menyu ochiq qolib, spinner ko'rinadi. */}
         <DropdownMenuItem
           onClick={signOut}
           closeOnClick={false}

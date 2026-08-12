@@ -15,13 +15,17 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ALL = "all-groups";
 
-/** Podiumdagi uch o'rin — rang medal token'laridan. */
 const PODIUM = ["ring-medal-gold/50 bg-medal-gold/10", "ring-medal-silver/50 bg-medal-silver/10", "ring-medal-bronze/50 bg-medal-bronze/10"];
 
 export default function LeaderboardPage() {
   const t = useT();
   const [period, setPeriod] = useState<LeaderboardPeriod>("week");
   const [ageGroup, setAgeGroup] = useState<string>(ALL);
+
+  const ageOptions = [
+    { value: ALL, label: t("common.all") },
+    ...AGE_GROUPS.map((group) => ({ value: group, label: t(`ageGroup.${group}`) })),
+  ];
 
   const { data, isLoading, isError, refetch } = useLeaderboardQuery({
     period,
@@ -34,15 +38,14 @@ export default function LeaderboardPage() {
       <PageHeader
         title={t("nav.leaderboard")}
         action={
-          <Select value={ageGroup} onValueChange={(value) => setAgeGroup(value ?? ALL)}>
+          <Select value={ageGroup} onValueChange={(value) => setAgeGroup(value ?? ALL)} items={ageOptions}>
             <SelectTrigger className="w-40" aria-label={t("lesson.ageGroup")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>{t("common.all")}</SelectItem>
-              {AGE_GROUPS.map((group) => (
-                <SelectItem key={group} value={group}>
-                  {t(`ageGroup.${group}`)}
+              {ageOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>

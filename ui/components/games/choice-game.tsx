@@ -3,19 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MicIcon, Volume2Icon } from "lucide-react";
 import { useLocale, useT } from "@/lib/i18n/provider";
-import { isRecognitionSupported, listenOnce, speak } from "@/lib/speech";
+import { isRecognitionSupported, listenOnce } from "@/lib/speech";
+import { useSpeaker } from "@/hooks/use-speaker";
 import { cn } from "@/lib/utils";
 import type { GameOption, GameType, PlayItem } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
-/**
- * `COLOR_MATCH`, `ANIMAL_SOUND`, `LETTER_MATCH`, `NUMBER_MATCH` — to'rttasi
- * ham "savol ko'rsatiladi, variantlardan biri tanlanadi". Farq faqat savol
- * va variant qanday chizilishida.
- *
- * Javob tanlanganda faqat "tanlandi" animatsiyasi bo'ladi — to'g'ri/xato
- * serverdan kelguncha noma'lum.
- */
 export function ChoiceGame({
   code,
   item,
@@ -28,27 +21,27 @@ export function ChoiceGame({
   const t = useT();
   const { locale } = useLocale();
 
+  const speaker = useSpeaker();
+
   const [selected, setSelected] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const stopListening = useRef<() => void>(() => undefined);
 
   const speakPrompt = useCallback(() => {
-    if (code === "ANIMAL_SOUND" && item.promptAudio) {
-      audioRef.current?.play().catch(() => undefined);
-      return;
-    }
+    speaker.sayText(item.promptText, item.promptAudio);
+  }, [item.promptAudio, item.promptText, speaker]);
 
-    if (item.promptText) speak(item.promptText, locale);
-  }, [code, item.promptAudio, item.promptText, locale]);
-
-  // Savol o'qib beriladi — bola o'qiy olmaydi. Komponent har savolda
-  // `key={item.id}` bilan qayta yaratiladi, shuning uchun `selected` ni bu
-  // yerda tozalash shart emas — u o'zi boshlang'ich holatda bo'ladi.
   useEffect(() => {
     const timer = setTimeout(speakPrompt, 250);
     return () => clearTimeout(timer);
   }, [speakPrompt]);
+
+  useEffect(() => {
+    speaker.prepare([
+      { url: item.promptAudio, text: item.promptText },
+      ...item.options.map((option) => ({ url: option.audio, text: option.label ?? option.value })),
+    ]);
+  }, [item.id, item.options, item.promptAudio, item.promptText, speaker]);
 
   useEffect(() => () => stopListening.current(), []);
 
@@ -56,11 +49,14 @@ export function ChoiceGame({
     if (selected) return;
 
     setSelected(value);
-    // Bola tanlaganini his qilsin, keyin keyingi savolga o'tamiz.
+
+    const option = item.options.find((candidate) => candidate.value === value);
+
+    if (option) speaker.sayText(option.label ?? option.value, option.audio);
+
     setTimeout(() => onAnswer(value), 450);
   };
 
-  /** Ovozli javob: aytilgan matn variant nomiga mos kelsa tanlanadi. */
   const listen = () => {
     if (listening) {
       stopListening.current();
@@ -115,9 +111,6 @@ export function ChoiceGame({
           )}
         </div>
 
-        {item.promptAudio && (
-          <audio ref={audioRef} src={item.promptAudio} preload="auto" />
-        )}
       </div>
 
       <div
@@ -160,7 +153,6 @@ function Prompt({ code, item }: { code: GameType; item: PlayItem }) {
           {item.promptText}
         </span>
 
-        {/* Raqam uchun shuncha nuqta — sonni sanab ko'rsatadi. */}
         {code === "NUMBER_MATCH" && Number(item.promptText) > 0 && Number(item.promptText) <= 10 && (
           <div className="flex flex-wrap justify-center gap-1.5" aria-hidden>
             {Array.from({ length: Number(item.promptText) }).map((_, index) => (
@@ -230,7 +222,6 @@ function OptionButton({
   );
 }
 
-/** Seed'da hayvon rasmlari yo'q — emoji fallback ishlatiladi. */
 const ANIMAL_EMOJI: Record<string, string> = {
   cat: "🐱",
   dog: "🐶",

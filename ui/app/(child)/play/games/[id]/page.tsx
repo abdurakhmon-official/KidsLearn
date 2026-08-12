@@ -37,14 +37,23 @@ export default function PlayGamePage({ params }: { params: Promise<{ id: string 
   if (!current) return null;
 
   return (
-    // `key={current.id}` — har savolda komponent qayta yaratiladi, shuning
-    // uchun tanlangan javob, aralashtirilgan bo'laklar va kartochkalar o'zi
-    // boshlang'ich holatga qaytadi; effekt ichida tozalash kerak emas.
+
     <GameShell title={round.game.title} index={index} total={total}>
       {round.game.code === "PUZZLE" ? (
-        <PuzzleGame key={current.id} item={current} config={round.game.config} onAnswer={answer} />
+        <PuzzleGame
+          key={current.id}
+          item={current}
+          config={round.game.config}
+          layout={(round.layout as number[] | null) ?? null}
+          onAnswer={answer}
+        />
       ) : round.game.code === "MEMORY" ? (
-        <MemoryGame key={current.id} item={current} config={round.game.config} onAnswer={answer} />
+        <MemoryGame
+          key={current.id}
+          item={current}
+          layout={(round.layout as string[] | null) ?? null}
+          onAnswer={answer}
+        />
       ) : (
         <ChoiceGame key={current.id} code={round.game.code} item={current} onAnswer={answer} />
       )}
