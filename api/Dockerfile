@@ -12,6 +12,7 @@ RUN yarn install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
+# `NODE_OPTIONS` — kichik instansiyalarda (2 GB RAM) tsc default heap bilan OOM bo'ladi.
 RUN set -eux; \
     PGBIN="$(dirname "$(ls -d /usr/libexec/postgresql*/initdb | head -1)")"; \
     export PATH="$PGBIN:$PATH"; \
@@ -26,7 +27,7 @@ RUN set -eux; \
     npx prisma generate --sql; \
     su-exec postgres pg_ctl -D "$PGDATA" -w stop; \
     rm -rf "$PGDATA"; \
-    yarn build
+    NODE_OPTIONS="--max-old-space-size=1536" yarn build
 
 FROM node:20-alpine AS runner
 
