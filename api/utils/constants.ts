@@ -35,6 +35,12 @@ export const UPLOAD_FOLDERS = ['games', 'lessons', 'categories', 'phrases', 'ava
 
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
 
+export const TTS_FOLDER = 'tts';
+
+export const READABLE_ASSET_FOLDERS = [...UPLOAD_FOLDERS, TTS_FOLDER] as const;
+
+export type ReadableAssetFolder = (typeof READABLE_ASSET_FOLDERS)[number];
+
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 export const UPLOAD_MIME_TYPES: Record<string, 'IMAGE' | 'VIDEO' | 'AUDIO'> = {

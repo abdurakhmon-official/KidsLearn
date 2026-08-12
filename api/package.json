@@ -29,6 +29,9 @@
     "schema": "./prisma/schema.prisma",
     "seed": "ts-node prisma/seed.ts"
   },
+  "resolutions": {
+    "jws": "^3.2.3"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
     "@aws-sdk/s3-request-presigner": "^3.1106.0",

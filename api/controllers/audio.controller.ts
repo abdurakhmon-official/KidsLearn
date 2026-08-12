@@ -13,21 +13,18 @@ export class AudioController {
 
   @Get('/speak')
   @Authorized(Authenticate())
-  @Description('Returns a cached text-to-speech audio URL for the given text.')
   async speak(@QueryParams('text') text: string, @QueryParams('locale') locale: string) {
     return await this.audioService.speak({ text, locale: locale as never });
   }
 
   @Post('/speak/batch')
   @Authorized(Authenticate())
-  @Description('Resolves many texts at once so a whole game round can be preloaded.')
   async speakBatch(@BodyParams() data: SpeakBatchInput) {
     return await this.audioService.speakBatch(data);
   }
 
   @Get('/phrases')
   @Authorized(Authenticate())
-  @Description('Recorded audio for interface phrases, as a { key: url } map.')
   async phrases(@QueryParams('locale') locale: string) {
     return await this.audioService.phrases(locale);
   }
@@ -52,7 +49,6 @@ export class AudioController {
 
   @Delete('/tts-cache')
   @Authorized(AdminOnly())
-  @Description('Removes generated speech clips that have not been used for a while.')
   async pruneCache(@QueryParams('days') days?: number) {
     return await this.audioService.pruneTtsCache(Number(days) || undefined);
   }

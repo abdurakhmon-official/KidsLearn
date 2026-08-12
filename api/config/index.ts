@@ -1,5 +1,6 @@
 import merge from 'lodash.merge';
 import { config as loadDotEnv } from 'dotenv';
+import { TTS_FOLDER } from '@/utils/constants';
 
 loadDotEnv();
 
@@ -77,7 +78,7 @@ export default merge(
       maxChars: Number(process.env.TTS_MAX_CHARS) || 400,
 
       hourlyBudget: Number(process.env.TTS_HOURLY_BUDGET) || 500,
-      folder: 'tts',
+      folder: TTS_FOLDER,
     },
     AWS_REGION: process.env.AWS_REGION || 'eu-central-1',
     AWS_S3_BUCKET: process.env.AWS_S3_BUCKET || '',

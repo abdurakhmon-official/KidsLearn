@@ -8,7 +8,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import config from '@/config';
 import { HmacSHA256, enc } from 'crypto-js';
-import { BadRequest } from '@tsed/exceptions';
+import { BadRequest, NotFound } from '@tsed/exceptions';
 import { PlatformContext } from '@tsed/common';
 import { Inject, Injectable, InjectContext } from '@tsed/di';
 import type { PlatformMulterFile } from '@tsed/platform-multer';
@@ -18,7 +18,14 @@ import { extname } from 'node:path';
 import { MEDIA_TYPE } from '@/generated/prisma';
 import { MediaService } from '@/services/media.service';
 import { uuid } from '@/utils';
-import { MAX_UPLOAD_BYTES, UPLOAD_FOLDERS, UPLOAD_MIME_TYPES, UploadFolder } from '@/utils/constants';
+import {
+  MAX_UPLOAD_BYTES,
+  READABLE_ASSET_FOLDERS,
+  ReadableAssetFolder,
+  UPLOAD_FOLDERS,
+  UPLOAD_MIME_TYPES,
+  UploadFolder,
+} from '@/utils/constants';
 
 const DEFAULT_EXTENSIONS: Record<string, string> = {
   'audio/mpeg': '.mp3',
@@ -59,10 +66,44 @@ export class S3Service {
   }
 
   async sign(allParams: string[], fileName: string, attachment: boolean) {
-    const key = allParams.join('/');
-    const filename = fileName || allParams[allParams.length - 1];
-    const url = await this.signUrl({ Key: key as string }, { attachment, filename });
+    const segments = this.assertReadableKey(allParams);
+    const key = segments.join('/');
+    const filename = fileName || segments[segments.length - 1];
+    const url = await this.signUrl({ Key: key }, { attachment, filename });
     return url;
+  }
+
+  // Bu endpoint ochiq, shuning uchun kalitni cheklamasak istalgan odam
+  // bucket'dagi **istalgan** obyektga imzolangan havola oldirib olardi.
+  // Ruxsat faqat ilova o'zi yozadigan papkalarga.
+  private assertReadableKey(allParams: string[] | string): string[] {
+    const segments = (Array.isArray(allParams) ? allParams : [allParams]).flatMap(segment =>
+      String(segment ?? '').split('/'),
+    );
+
+    const malformed =
+      segments.length < 2 ||
+      !READABLE_ASSET_FOLDERS.includes(segments[0] as ReadableAssetFolder) ||
+      segments.some(segment => !segment || segment === '.' || segment === '..' || /[\\\0]/.test(segment));
+
+    if (malformed) {
+      throw new NotFound('file not found');
+    }
+
+    return segments;
+  }
+
+  // `?fileName=` foydalanuvchidan keladi va imzolangan javob sarlavhasiga
+  // tushadi — qo'shtirnoq yoki satr uzilishi sarlavhani buzadi.
+  private safeFilename(filename?: string): string {
+    const cleaned = (filename || '')
+      .replace(/[\r\n"\\]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1f\x7f]/g, '')
+      .trim()
+      .slice(0, 200);
+
+    return cleaned || 'download';
   }
 
   async signUrl(
@@ -80,7 +121,7 @@ export class S3Service {
     }
 
     if (options.attachment) {
-      commandParams.ResponseContentDisposition = 'attachment; filename ="' + options.filename + '"';
+      commandParams.ResponseContentDisposition = `attachment; filename="${this.safeFilename(options.filename)}"`;
     }
 
     if (!options.expiresIn) {
