@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ChevronDownIcon,
   Loader2Icon,
@@ -11,11 +10,8 @@ import {
   UserRoundIcon,
   UsersRoundIcon,
 } from "lucide-react";
-import { useLogoutMutation } from "@/store/api/auth-api";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearAuth } from "@/store/slices/authSlice";
-import { baseApi } from "@/store/api/base-api";
-import { clearSession } from "@/lib/session";
+import { useAppSelector } from "@/store/hooks";
+import { useSignOut } from "@/hooks/use-sign-out";
 import { useT } from "@/lib/i18n/provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -39,24 +35,13 @@ const initialsOf = (name?: string) =>
 
 export function UserNav() {
   const t = useT();
-  const router = useRouter();
-  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const isAdmin = useAppSelector((state) => state.auth.role === "ADMIN");
 
-  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const { signOut, isSigningOut } = useSignOut();
 
   const initials = initialsOf(user?.fullName);
   const roleLabel = isAdmin ? t("nav.roleAdmin") : t("nav.roleParent");
-
-  const signOut = async () => {
-    await logout().unwrap().catch(() => undefined);
-    clearSession();
-    dispatch(clearAuth());
-    dispatch(baseApi.util.resetApiState());
-    router.replace("/login");
-    router.refresh();
-  };
 
   return (
     <DropdownMenu>
@@ -127,11 +112,11 @@ export function UserNav() {
         <DropdownMenuItem
           onClick={signOut}
           closeOnClick={false}
-          disabled={isLoggingOut}
+          disabled={isSigningOut}
           variant="destructive"
         >
-          {isLoggingOut ? <Loader2Icon className="animate-spin" /> : <LogOutIcon />}
-          {isLoggingOut ? t("nav.loggingOut") : t("nav.logout")}
+          {isSigningOut ? <Loader2Icon className="animate-spin" /> : <LogOutIcon />}
+          {isSigningOut ? t("nav.loggingOut") : t("nav.logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

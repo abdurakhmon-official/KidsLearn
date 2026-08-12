@@ -17,6 +17,8 @@ const api = axios.create({
 const PUBLIC_PATHS = ["/login", "/register"];
 const PUBLIC_ENDPOINTS = ["/auth/login", "/auth/register"];
 
+const ROLE_MISMATCH = "you are not authorized to access this resource.";
+
 api.interceptors.request.use((config) => {
   const token = getToken();
 
@@ -35,7 +37,7 @@ api.interceptors.response.use(
   (response) => {
     const message = response.data?._message;
 
-    if (message) {
+    if (message && !response.config?.silent) {
       toast.success(translateServerMessage(message));
     }
 
@@ -65,6 +67,13 @@ api.interceptors.response.use(
 
         return Promise.reject(error);
       }
+    }
+
+    // A role-scoped 403 means a screen from the previous session refetched right after a
+    // role switch (parent ⇄ child). Routing already sends the user to their own home page,
+    // so there is nothing here for them to act on.
+    if (status === 403 && message.trim().toLowerCase() === ROLE_MISMATCH) {
+      return Promise.reject(error);
     }
 
     const hasFieldErrors = Boolean(error.response?.data?.errors?.length);

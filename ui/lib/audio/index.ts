@@ -38,31 +38,43 @@ async function resolveUrl(utterance: Utterance, locale: Locale): Promise<string 
   return cachedTtsUrl(text, locale) ?? (await resolveTtsUrl(text, locale));
 }
 
+let epoch = 0;
+
 export async function say(
   utterance: Utterance,
   locale: Locale,
   channel: Channel = "voice",
 ): Promise<void> {
   const url = await resolveUrl(utterance, locale);
+  const text = normalizeText(utterance.text);
 
   if (!url) {
-    if (channel === "voice") speakWithBrowser(normalizeText(utterance.text), locale);
+    if (channel === "voice") await speakWithBrowser(text, locale);
 
     return;
   }
 
   if (channel === "voice") cancelBrowserSpeech();
 
-  await (channel === "effect" ? effect : voice).play(url);
+  const played = await (channel === "effect" ? effect : voice).play(url);
+
+  // Yozib olingan fayl ijro etilmasa (autoplay bloki, fayl yo'q) — jim qolmaymiz.
+  if (!played && channel === "voice") await speakWithBrowser(text, locale);
 }
 
 export async function saySequence(utterances: Utterance[], locale: Locale): Promise<void> {
+  const current = epoch;
+
   for (const utterance of utterances) {
     await say(utterance, locale);
+
+    if (current !== epoch) return;
   }
 }
 
 export function stopAll() {
+  epoch += 1;
+
   stopPlayers();
   cancelBrowserSpeech();
 }

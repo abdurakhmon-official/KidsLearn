@@ -23,10 +23,11 @@ class Channel {
     return this.element;
   }
 
-  play(url: string): Promise<void> {
+  /** Ijro tugaguncha kutadi. `false` — fayl umuman ijro etilmadi (masalan, autoplay bloki). */
+  play(url: string): Promise<boolean> {
     const audio = this.audio;
 
-    if (!audio || !url) return Promise.resolve();
+    if (!audio || !url) return Promise.resolve(false);
 
     const token = ++this.token;
 
@@ -34,18 +35,21 @@ class Channel {
     audio.src = url;
     audio.currentTime = 0;
 
-    return new Promise<void>((resolve) => {
-      const done = () => {
-        audio.removeEventListener("ended", done);
-        audio.removeEventListener("error", done);
+    return new Promise<boolean>((resolve) => {
+      const settle = (played: boolean) => {
+        audio.removeEventListener("ended", ended);
+        audio.removeEventListener("error", failed);
 
-        if (token === this.token) resolve();
+        if (token === this.token) resolve(played);
       };
 
-      audio.addEventListener("ended", done);
-      audio.addEventListener("error", done);
+      const ended = () => settle(true);
+      const failed = () => settle(false);
 
-      audio.play().catch(() => done());
+      audio.addEventListener("ended", ended);
+      audio.addEventListener("error", failed);
+
+      audio.play().catch(() => settle(false));
     });
   }
 

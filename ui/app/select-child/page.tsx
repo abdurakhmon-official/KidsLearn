@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { LayoutDashboardIcon, Loader2Icon, LogOutIcon, PlusIcon } from "lucide-react";
 import { useListChildrenQuery } from "@/store/api/child-api";
-import { useLogoutMutation } from "@/store/api/auth-api";
 import { useChildMode } from "@/hooks/use-child-mode";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearAuth } from "@/store/slices/authSlice";
-import { baseApi } from "@/store/api/base-api";
-import { clearSession } from "@/lib/session";
+import { useSignOut } from "@/hooks/use-sign-out";
+import { useAppSelector } from "@/store/hooks";
 import { useT } from "@/lib/i18n/provider";
 import { ChildFormDialog } from "@/components/parent/child-form-dialog";
 import { AgeGroupBadge } from "@/components/shared/badges";
@@ -21,23 +17,12 @@ import { Button } from "@/components/ui/button";
 
 export default function SelectChildPage() {
   const t = useT();
-  const router = useRouter();
-  const dispatch = useAppDispatch();
   const isAdmin = useAppSelector((state) => state.auth.role === "ADMIN");
 
   const { data: children, isLoading, isError, refetch } = useListChildrenQuery();
   const { enter, pendingChildId } = useChildMode();
-  const [logout] = useLogoutMutation();
+  const { signOut, isSigningOut } = useSignOut();
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const signOut = async () => {
-    await logout().unwrap().catch(() => undefined);
-    clearSession();
-    dispatch(clearAuth());
-    dispatch(baseApi.util.resetApiState());
-    router.replace("/login");
-    router.refresh();
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(ellipse_at_top,var(--accent),var(--background))]">
@@ -108,9 +93,13 @@ export default function SelectChildPage() {
             <LayoutDashboardIcon data-icon="inline-start" />
             {isAdmin ? t("nav.adminPanel") : t("child.parentCabinet")}
           </Button>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOutIcon data-icon="inline-start" />
-            {t("nav.logout")}
+          <Button variant="ghost" onClick={signOut} disabled={isSigningOut}>
+            {isSigningOut ? (
+              <Loader2Icon data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <LogOutIcon data-icon="inline-start" />
+            )}
+            {isSigningOut ? t("nav.loggingOut") : t("nav.logout")}
           </Button>
         </div>
       </main>

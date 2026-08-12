@@ -28,6 +28,8 @@ const TILES = [
   },
 ] as const;
 
+let greetedChildId: string | null = null;
+
 export default function PlayHomePage() {
   const t = useT();
   const speaker = useSpeaker();
@@ -35,13 +37,15 @@ export default function PlayHomePage() {
   const { data: progress } = useMyProgressQuery();
 
   useEffect(() => {
-    if (!child?.fullName) return;
+    if (!child?.id || !child.fullName || greetedChildId === child.id) return;
+
+    greetedChildId = child.id;
 
     speaker.sayAll([
       { phraseKey: "play.greeting", text: t("play.greeting") },
       { text: child.fullName },
     ]);
-  }, [child?.fullName, speaker, t]);
+  }, [child?.id, child?.fullName, speaker, t]);
 
   return (
     <div className="space-y-8">

@@ -25,6 +25,22 @@ JWT_SECRET=uzun-tasodifiy-satr docker compose up --build
 | http://localhost:9100/docs | Swagger hujjatlari |
 | localhost:5433 | PostgreSQL |
 
+### Ovoz (TTS)
+
+Compose `api` xizmatiga o'zgaruvchilarni **repo ildizidagi `.env`** dan uzatadi.
+`AZURE_SPEECH_KEY` berilmasa server TTS'ni o'chiradi va ilova brauzerning o'rnatilma
+sintezatoriga tushadi — ovoz robotdek g'alati eshitiladi. Tabiiy ovoz uchun ildizda
+`.env` yarating:
+
+```bash
+AZURE_SPEECH_KEY=...
+AZURE_SPEECH_REGION=westeurope
+AWS_REGION=...            # audio S3 ga yoziladi
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_S3_BUCKET=...
+```
+
 Birinchi ishga tushirishda migratsiyalar avtomatik qo'llanadi. Seed ma'lumotini
 qo'shish uchun:
 
@@ -32,12 +48,37 @@ qo'shish uchun:
 docker compose exec api npx prisma db seed
 ```
 
-### Demo hisoblar
+> `prisma db seed` faqat **development**'da ishlaydi — production image'da
+> `.ts` manbalar yo'q (faqat `dist/`), shuning uchun seed yiqiladi.
+
+### Demo hisoblar (faqat seed'dan keyin)
 
 | Rol | Email | Parol |
 |---|---|---|
-| Administrator | `admin@kidslearn.uz` | `password123` |
-| Ota-ona | `ota-ona@kidslearn.uz` | `password123` |
+| Administrator | `admin@gmail.com` | `password123` |
+| Ota-ona | `parent@gmail.com` | `password123` |
+
+### Production'da admin yaratish
+
+Seed'siz, real serverda admin ochish (yoki mavjud hisobni ADMIN qilish va
+parolini tiklash). Parol argument sifatida berilmasa yashirin so'raladi —
+shunda u shell tarixiga ham, `ps` chiqishiga ham tushmaydi:
+
+```bash
+docker compose exec api node scripts/create-admin.js admin@example.com --name "Ism Familiya"
+# Parol: ****
+```
+
+Docker'siz (pm2 / systemd) o'rnatilgan bo'lsa, `api/` papkasidan (`.env` dan
+`DATABASE_URL` o'qiladi):
+
+```bash
+node scripts/create-admin.js admin@example.com
+```
+
+> Parolni `.env` ga (`ADMIN_PASSWORD`) yozmang — u bir martalik amal uchun
+> kerak, `.env` esa doimiy: parol diskda ochiq qoladi va `docker inspect`,
+> `docker compose config`, backup'larda ko'rinadi.
 
 Bola profillari ota-ona hisobiga ulangan — kirgandan keyin **profil tanlash**
 ekranida tanlanadi (bolalarda parol yo'q).

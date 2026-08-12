@@ -12,7 +12,6 @@ services:
     volumes:
       - kidslearn-pgdata:/var/lib/postgresql/data
     healthcheck:
-      # API baza tayyor bo'lgunicha kutadi, aks holda migratsiya yiqiladi.
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-kidslearn}']
       interval: 5s
       timeout: 5s
@@ -33,14 +32,22 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET majburiy}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-      # Prod'da API hujjati yopiq turadi — ochish uchun ataylab
-      # `SWAGGER_ENABLED=true` berish kerak.
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
       SWAGGER_PATH: ${SWAGGER_PATH:-/docs}
       AWS_REGION: ${AWS_REGION:-}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      TTS_PROVIDER: ${TTS_PROVIDER:-azure}
+      AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
+      AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-westeurope}
+      TTS_VOICE_UZ: ${TTS_VOICE_UZ:-uz-UZ-MadinaNeural}
+      TTS_VOICE_RU: ${TTS_VOICE_RU:-ru-RU-SvetlanaNeural}
+      TTS_VOICE_EN: ${TTS_VOICE_EN:-en-US-JennyNeural}
+      TTS_RATE: ${TTS_RATE:--8%}
+      TTS_PITCH: ${TTS_PITCH:-+4%}
+      TTS_MAX_CHARS: ${TTS_MAX_CHARS:-400}
+      TTS_HOURLY_BUDGET: ${TTS_HOURLY_BUDGET:-500}
     ports:
       - '${API_PORT:-9100}:9100'
 
