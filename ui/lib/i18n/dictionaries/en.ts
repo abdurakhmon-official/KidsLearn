@@ -58,6 +58,15 @@ export const en: Dictionary = {
   "audio.recorded": "Recorded",
   "audio.generated": "Read automatically",
   "audio.localeHint": "Recorded separately for each language",
+
+  "audio.key.play.greeting": "Child mode greeting",
+  "audio.key.lesson.title": "Lessons section",
+  "audio.key.game.title": "Games section",
+  "audio.key.progress.title": "Progress page",
+  "audio.key.game.resultTitle": "Praise after a game",
+  "audio.key.game.puzzleHint": "Puzzle hint",
+  "audio.key.award.newAward": "New award announcement",
+
   "nav.overview": "Overview",
   "nav.account": "Account",
   "nav.roleAdmin": "Administrator",

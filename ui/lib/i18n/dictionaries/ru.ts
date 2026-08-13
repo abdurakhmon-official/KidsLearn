@@ -58,6 +58,15 @@ export const ru: Dictionary = {
   "audio.recorded": "Записано",
   "audio.generated": "Читается автоматически",
   "audio.localeHint": "Записывается отдельно для каждого языка",
+
+  "audio.key.play.greeting": "Приветствие в детском режиме",
+  "audio.key.lesson.title": "Раздел уроков",
+  "audio.key.game.title": "Раздел игр",
+  "audio.key.progress.title": "Страница достижений",
+  "audio.key.game.resultTitle": "Похвала после игры",
+  "audio.key.game.puzzleHint": "Подсказка в пазле",
+  "audio.key.award.newAward": "Сообщение о новой награде",
+
   "nav.overview": "Обзор",
   "nav.account": "Аккаунт",
   "nav.roleAdmin": "Администратор",

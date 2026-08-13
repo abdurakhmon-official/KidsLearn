@@ -127,7 +127,7 @@ export default function AdminAudioPage() {
 
                     return (
                       <TableRow key={key}>
-                        <TableCell className="font-mono text-xs text-muted-foreground">{key}</TableCell>
+                        <TableCell className="text-sm">{t(`audio.key.${key}`)}</TableCell>
                         <TableCell className="font-medium">{text}</TableCell>
                         <TableCell>
                           {row ? (

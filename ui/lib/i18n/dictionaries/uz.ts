@@ -56,6 +56,17 @@ export const uz = {
   "audio.recorded": "Yozib olingan ovoz",
   "audio.generated": "Avtomatik o'qiladi",
   "audio.localeHint": "Har bir til uchun alohida yoziladi",
+
+  // Iboraning ilovada qayerda eshitilishini tushuntiradi — admin panelida
+  // `play.greeting` kabi xom kalit o'rniga shu nomlar ko'rsatiladi.
+  "audio.key.play.greeting": "Bola rejimidagi salom",
+  "audio.key.lesson.title": "Darslar bo'limi",
+  "audio.key.game.title": "O'yinlar bo'limi",
+  "audio.key.progress.title": "Yutuqlar sahifasi",
+  "audio.key.game.resultTitle": "O'yin tugagandagi maqtov",
+  "audio.key.game.puzzleHint": "Puzzle o'yinidagi maslahat",
+  "audio.key.award.newAward": "Yangi mukofot xabari",
+
   "nav.overview": "Umumiy",
   "nav.account": "Hisob",
   "nav.roleAdmin": "Administrator",
