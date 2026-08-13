@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/store";
 
 const VOICE_FALLBACKS: Record<Locale, string[]> = {
-  uz: ["uz", "ru", "en"],
+  uz: ["uz", "tr", "az", "kk", "en"],
   ru: ["ru", "en"],
   en: ["en"],
 };

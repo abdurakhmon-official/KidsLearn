@@ -82,6 +82,23 @@ node scripts/create-admin.js admin@example.com
 > kerak, `.env` esa doimiy: parol diskda ochiq qoladi va `docker inspect`,
 > `docker compose config`, backup'larda ko'rinadi.
 
+### Eski fayl havolalarini tuzatish
+
+Yuklangan fayllarga havola bazaga **to'liq manzil** bilan yoziladi. Agar
+`PUBLIC_API_URL` noto'g'ri bo'lgan paytda fayl yuklangan bo'lsa (masalan
+`http://localhost:9100/...`), o'sha qatorlar keyin ham eski manzilni
+qaytaraveradi va brauzer faylni topolmaydi. Bir marta yangilash uchun:
+
+```bash
+docker compose exec api node scripts/fix-asset-urls.js           # nima o'zgarishini ko'rsatadi
+docker compose exec api node scripts/fix-asset-urls.js --apply   # yozadi
+```
+
+Skript `category.audioUrl`, `lesson.videoUrl/audioUrl`, `lessonMedia.url`,
+`mediaAsset.url`, `phraseAudio.url` va `ttsCache.url` ustunlarini tekshiradi.
+Tashqi havolalarga (YouTube va h.k.) tegmaydi — faqat `/s3/file/` bor
+manzillar yangilanadi.
+
 Bola profillari ota-ona hisobiga ulangan — kirgandan keyin **profil tanlash**
 ekranida tanlanadi (bolalarda parol yo'q).
 
@@ -238,8 +255,7 @@ qachon yagona signal bo'lmaydi.
 
 | Ish | Holat |
 |---|---|
-| S3 `generatePolicy` papka ro'yxati | `['brands','products','avatars']` — boshqa loyihadan qolgan. Dars/o'yin media'si uchun `lessons`, `games` qo'shilishi kerak; hozircha admin panelida URL kiritiladi |
-| `POST /s3/:folder/upload` | `multer` yo'q, shuning uchun ishlamaydi. Presigned policy oqimi baribir afzal (fayl API serveridan o'tmaydi) |
+| Brauzerda ovoz yozish | Kod tayyor (`useRecorder`), lekin `navigator.mediaDevices` faqat **HTTPS** da mavjud. Sayt HTTP'da turgani uchun mikrofon tugmasi ko'rinmaydi — sertifikat qo'yilishi kerak |
 | Sana filtri | Hozir faqat darslarda (`from`/`to`); bolalar va o'yinlarga ham qo'shilishi mumkin |
 | Push Notification | Backend'da web-push/VAPID yo'q — hozircha in-app bildirishnomalar |
 | Testlar | API'da `jest` sozlangan, unit testlar yozilishi kerak |

@@ -53,7 +53,7 @@ export class TtsService {
         .update({ where: { hash }, data: { lastUsedAt: new Date() } })
         .catch(() => undefined);
 
-      return { url: cached.url, cached: true, durationMs: cached.durationMs };
+      return { url: this.s3Service.assetUrl(cached.key), cached: true, durationMs: cached.durationMs };
     }
 
     const pending = TtsService.inFlight.get(hash);

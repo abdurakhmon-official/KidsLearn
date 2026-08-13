@@ -23,6 +23,7 @@
     "db:deploy": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "create:admin": "node scripts/create-admin.js",
+    "fix:asset-urls": "node scripts/fix-asset-urls.js",
     "db:reset": "npx prisma migrate reset",
     "db:studio": "npx prisma studio"
   },
@@ -52,6 +53,7 @@
     "@tsed/platform-express": "^8.12.4",
     "@tsed/platform-log-middleware": "^8.12.4",
     "@tsed/platform-middlewares": "^8.12.4",
+    "@tsed/platform-multer": "8.12.4",
     "@tsed/platform-params": "^8.12.4",
     "@tsed/platform-response-filter": "^8.12.4",
     "@tsed/platform-views": "^8.12.4",

@@ -49,7 +49,10 @@ export class AudioService {
 
       await Promise.all(
         slice.map(async text => {
-          const result = await this.ttsService.resolve(text, locale).catch(() => null);
+          const result = await this.ttsService.resolve(text, locale).catch(error => {
+            console.error('tts batch item failed', { locale, text: text.slice(0, 60), message: error?.message });
+            return null;
+          });
 
           if (result) {
             items[text] = result.url;
