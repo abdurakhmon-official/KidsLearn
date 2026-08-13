@@ -4,18 +4,15 @@ const { PrismaClient } = require('../generated/prisma/client');
 
 const prisma = new PrismaClient({ log: ['error'] });
 
-// Yuklangan fayllarga havola bazaga to'liq manzil bilan yoziladi. `PUBLIC_API_URL`
-// noto'g'ri bo'lgan paytda yozilgan qatorlar keyin ham eski manzilni qaytaraveradi
-// (masalan `http://localhost:9100/...`), shuning uchun ularni bir marta yangilash kerak.
 const MARKER = '/s3/file/';
 
 const TARGETS = [
-  { model: 'category', columns: ['audioUrl'] },
-  { model: 'lesson', columns: ['videoUrl', 'audioUrl'] },
-  { model: 'lessonMedia', columns: ['url'] },
-  { model: 'mediaAsset', columns: ['url'] },
-  { model: 'phraseAudio', columns: ['url'] },
-  { model: 'ttsCache', columns: ['url'] },
+  { model: 'category', pk: 'id', columns: ['audioUrl'] },
+  { model: 'lesson', pk: 'id', columns: ['videoUrl', 'audioUrl'] },
+  { model: 'lessonMedia', pk: 'id', columns: ['url'] },
+  { model: 'mediaAsset', pk: 'id', columns: ['url'] },
+  { model: 'phraseAudio', pk: 'id', columns: ['url'] },
+  { model: 'ttsCache', pk: 'hash', columns: ['url'] },
 ];
 
 function rebuild(url, base) {
@@ -23,7 +20,6 @@ function rebuild(url, base) {
 
   const at = url.indexOf(MARKER);
 
-  // Tashqi havolalar (admin qo'lda kiritgan YouTube va h.k.) tegilmaydi.
   if (at === -1) return null;
 
   const next = base + url.slice(at);
@@ -49,11 +45,11 @@ async function main() {
 
   let total = 0;
 
-  for (const { model, columns } of TARGETS) {
+  for (const { model, pk, columns } of TARGETS) {
     for (const column of columns) {
       const rows = await prisma[model].findMany({
         where: { [column]: { contains: MARKER } },
-        select: { id: true, [column]: true },
+        select: { [pk]: true, [column]: true },
       });
 
       let changed = 0;
@@ -66,7 +62,7 @@ async function main() {
         changed += 1;
 
         if (apply) {
-          await prisma[model].update({ where: { id: row.id }, data: { [column]: next } });
+          await prisma[model].update({ where: { [pk]: row[pk] }, data: { [column]: next } });
         } else {
           console.log(`  ${model}.${column}: ${row[column]}\n    → ${next}`);
         }
