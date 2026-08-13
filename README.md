@@ -41,17 +41,19 @@ AWS_SECRET_ACCESS_KEY=...
 AWS_S3_BUCKET=...
 ```
 
-Birinchi ishga tushirishda migratsiyalar avtomatik qo'llanadi. Seed ma'lumotini
-qo'shish uchun:
+Migratsiyalar va **kontent seed'i** (fanlar, darslar, o'yinlar) har bir ishga
+tushishda avtomatik qo'llanadi — konteyner ichida `node dist/prisma/seed.js`
+ishlaydi, ikkalasi ham idempotent.
 
-```bash
-docker compose exec api npx prisma db seed
-```
+Demo hisoblar bundan **istisno**: parollari repoda ochiq turgani uchun
+production'da o'z-o'zidan yaratilmaydi. Kerak bo'lsa ildizdagi `.env` ga
+`SEED_DEMO=true` qo'shib `docker compose up -d api` qiling.
 
-> `prisma db seed` faqat **development**'da ishlaydi — production image'da
-> `.ts` manbalar yo'q (faqat `dist/`), shuning uchun seed yiqiladi.
+> `npx prisma db seed` faqat **development**'da ishlaydi — u `ts-node` talab
+> qiladi, production image'da esa `.ts` manbalar yo'q (faqat `dist/`).
+> Konteynerda qo'lda seed qilish kerak bo'lsa: `docker compose exec api node dist/prisma/seed.js`.
 
-### Demo hisoblar (faqat seed'dan keyin)
+### Demo hisoblar (`SEED_DEMO=true` bo'lganda)
 
 | Rol | Email | Parol |
 |---|---|---|

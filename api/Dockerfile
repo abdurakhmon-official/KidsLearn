@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
 
-# ---------------------------------------------------------------- builder
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -12,7 +11,6 @@ RUN yarn install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
-# `NODE_OPTIONS` — kichik instansiyalarda (2 GB RAM) tsc default heap bilan OOM bo'ladi.
 RUN set -eux; \
     PGBIN="$(dirname "$(ls -d /usr/libexec/postgresql*/initdb | head -1)")"; \
     export PATH="$PGBIN:$PATH"; \
@@ -50,4 +48,4 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 EXPOSE 9100
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && (node dist/prisma/seed.js || echo 'DIQQAT: seed yiqildi, API baribir ishga tushmoqda') && node dist/index.js"]

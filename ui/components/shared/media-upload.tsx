@@ -33,6 +33,7 @@ export function MediaUpload({
   folder,
   value,
   onChange,
+  onCommit,
   placeholder = "https://…",
   compact,
   className,
@@ -44,6 +45,8 @@ export function MediaUpload({
   folder: UploadFolder;
   value: string | undefined;
   onChange: (url: string) => void;
+  /** Fired only when the url is final (blur, upload, clear) — for callers that persist it right away. */
+  onCommit?: (url: string) => void;
   placeholder?: string;
   compact?: boolean;
   className?: string;
@@ -87,6 +90,7 @@ export function MediaUpload({
       const asset = await uploadMedia({ folder, file }).unwrap();
 
       onChange(asset.url);
+      onCommit?.(asset.url);
       setUploaded({ name: asset.originalName, size: asset.size });
     } catch {
       setError(t("upload.failed"));
@@ -105,6 +109,7 @@ export function MediaUpload({
 
   const clear = () => {
     onChange("");
+    onCommit?.("");
     setUploaded(null);
     setError(null);
   };
@@ -120,7 +125,6 @@ export function MediaUpload({
       <div className="flex flex-wrap items-center gap-2">
 
         {kind === "image" && value && (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={value}
             alt=""
@@ -134,6 +138,7 @@ export function MediaUpload({
           value={value ?? ""}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
+          onBlur={(event) => onCommit?.(event.target.value)}
           className="min-w-40 flex-1"
         />
 

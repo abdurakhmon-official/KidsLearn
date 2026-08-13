@@ -28,6 +28,7 @@ const PAGE_SIZE = 100;
 export default function AdminAudioPage() {
   const t = useT();
   const [locale, setLocale] = useState<Locale>("uz");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError, refetch } = usePhraseAudioPaginatedQuery({
     page: 1,
@@ -40,15 +41,36 @@ export default function AdminAudioPage() {
 
   const existing = new Map((data?.items ?? []).map((row) => [row.key, row]));
 
+  const clearDraft = (key: string) =>
+    setDrafts((prev) => {
+      if (!(key in prev)) return prev;
+
+      const next = { ...prev };
+      delete next[key];
+
+      return next;
+    });
+
   const save = async (key: string, text: string, url: string) => {
     const current = existing.get(key);
+    const next = url.trim();
 
-    if (!url) {
-      if (current) await removePhraseAudio(current.id).unwrap().catch(() => undefined);
+    if (next === (current?.url ?? "")) {
+      clearDraft(key);
       return;
     }
 
-    await upsertPhraseAudio({ key, locale, text, url }).unwrap().catch(() => undefined);
+    if (!next) {
+      if (current) await removePhraseAudio(current.id).unwrap().catch(() => undefined);
+      clearDraft(key);
+      return;
+    }
+
+    const saved = await upsertPhraseAudio({ key, locale, text, url: next })
+      .unwrap()
+      .catch(() => undefined);
+
+    if (saved) clearDraft(key);
   };
 
   return (
@@ -60,7 +82,13 @@ export default function AdminAudioPage() {
           <Label htmlFor="audio-locale" className="text-xs">
             {t("audio.localeHint")}
           </Label>
-          <Select value={locale} onValueChange={(value) => setLocale((value ?? "uz") as Locale)}>
+          <Select
+            value={locale}
+            onValueChange={(value) => {
+              setLocale((value ?? "uz") as Locale);
+              setDrafts({});
+            }}
+          >
             <SelectTrigger id="audio-locale" className="w-44">
               <SelectValue />
             </SelectTrigger>
@@ -116,8 +144,9 @@ export default function AdminAudioPage() {
                             kind="audio"
                             folder="phrases"
                             compact
-                            value={row?.url ?? ""}
-                            onChange={(url) => void save(key, text, url)}
+                            value={drafts[key] ?? row?.url ?? ""}
+                            onChange={(url) => setDrafts((prev) => ({ ...prev, [key]: url }))}
+                            onCommit={(url) => void save(key, text, url)}
                           />
                         </TableCell>
                       </TableRow>

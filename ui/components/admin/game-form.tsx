@@ -28,6 +28,13 @@ const optionalUrl = z
   .optional()
   .or(z.literal("").transform(() => undefined));
 
+/** Bo'sh qoldirilgan raqamli maydon xatoga emas, `undefined` ga aylanadi. */
+const optionalCount = (min: number, max: number) =>
+  z
+    .union([z.literal(""), z.coerce.number().int().min(min).max(max)])
+    .optional()
+    .transform((value) => (value === "" ? undefined : value));
+
 const optionSchema = z.object({
   value: z.string().min(1, "Qiymat kiriting"),
   label: z.string().optional(),
@@ -64,10 +71,10 @@ const schema = z.object({
   pointsPerCorrect: z.coerce.number().int().min(0).max(100),
   order: z.coerce.number().int().min(0),
   active: z.boolean(),
-  rows: z.coerce.number().int().min(2).max(5).optional(),
-  cols: z.coerce.number().int().min(2).max(5).optional(),
-  pairs: z.coerce.number().int().min(2).max(8).optional(),
-  itemsPerRound: z.coerce.number().int().min(1).max(50).optional(),
+  rows: optionalCount(2, 5),
+  cols: optionalCount(2, 5),
+  pairs: optionalCount(2, 8),
+  itemsPerRound: optionalCount(1, 50),
   items: z.array(itemSchema),
 });
 
@@ -103,6 +110,10 @@ export function GameForm({ game }: { game?: GameDetail }) {
 
   const items = useFieldArray({ control: form.control, name: "items" });
   const code = form.watch("code");
+
+  const puzzleRows = Number(form.watch("rows")) || 3;
+  const puzzleCols = Number(form.watch("cols")) || 3;
+  const memoryPairs = Number(form.watch("pairs")) || 6;
 
   const typeOptions = GAME_TYPES.map((type) => ({ value: type, label: t(`game.type.${type}`) }));
 
@@ -292,36 +303,55 @@ export function GameForm({ game }: { game?: GameDetail }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Config</CardTitle>
+          <CardTitle>{t("admin.gameSettings")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("admin.gameSettingsHint")}</p>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+        <CardContent className="space-y-5">
           {code === "PUZZLE" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="g-rows">rows</Label>
-                <Input id="g-rows" type="number" min={2} max={5} {...form.register("rows")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="g-cols">cols</Label>
-                <Input id="g-cols" type="number" min={2} max={5} {...form.register("cols")} />
-              </div>
-            </>
-          )}
-
-          {code === "MEMORY" && (
             <div className="space-y-2">
-              <Label htmlFor="g-pairs">pairs</Label>
-              <Input id="g-pairs" type="number" min={2} max={8} {...form.register("pairs")} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="g-rows">{t("admin.puzzleRows")}</Label>
+                  <Input id="g-rows" type="number" min={2} max={5} {...form.register("rows")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="g-cols">{t("admin.puzzleCols")}</Label>
+                  <Input id="g-cols" type="number" min={2} max={5} {...form.register("cols")} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("admin.puzzlePiecesHint", { rows: puzzleRows, cols: puzzleCols, count: puzzleRows * puzzleCols })}
+              </p>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="g-round">
-              itemsPerRound <span className="text-muted-foreground">({t("common.optional")})</span>
-            </Label>
-            <Input id="g-round" type="number" min={1} max={50} {...form.register("itemsPerRound")} />
-          </div>
+          {code === "MEMORY" && (
+            <div className="space-y-2 sm:max-w-xs">
+              <Label htmlFor="g-pairs">{t("admin.memoryPairs")}</Label>
+              <Input id="g-pairs" type="number" min={2} max={8} {...form.register("pairs")} />
+              <p className="text-xs text-muted-foreground">
+                {t("admin.memoryPairsHint", { pairs: memoryPairs, count: memoryPairs * 2 })}
+              </p>
+            </div>
+          )}
 
+          <div className="space-y-2 sm:max-w-xs">
+            <Label htmlFor="g-round">
+              {t("admin.itemsPerRound")} <span className="text-muted-foreground">({t("common.optional")})</span>
+            </Label>
+            <Input
+              id="g-round"
+              type="number"
+              min={1}
+              max={50}
+              placeholder={t("admin.itemsPerRoundAll")}
+              {...form.register("itemsPerRound")}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("admin.itemsPerRoundHint", { count: items.fields.length })}
+            </p>
+            {error("itemsPerRound") && <p className="text-xs text-destructive">{error("itemsPerRound")}</p>}
+          </div>
         </CardContent>
       </Card>
 

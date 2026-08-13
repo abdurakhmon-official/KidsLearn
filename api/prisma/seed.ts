@@ -103,32 +103,7 @@ function birthDateForAge(age: number): Date {
   return date;
 }
 
-async function main() {
-  const password = await hashPassword('password123');
-
-  await prisma.user.upsert({
-    where: { email: 'admin@gmail.com' },
-    update: {},
-    create: {
-      fullName: 'Administrator',
-      email: 'admin@gmail.com',
-      password,
-      role: USER_ROLE.ADMIN,
-    },
-  });
-
-  const parent = await prisma.user.upsert({
-    where: { email: 'parent@gmail.com' },
-    update: {},
-    create: {
-      fullName: 'Malika Abduvaliyeva',
-      email: 'parent@gmail.com',
-      password,
-      role: USER_ROLE.PARENT,
-      phone: '+998901234567',
-    },
-  });
-
+async function seedContent() {
   const categories = new Map<string, string>();
 
   for (const category of CATEGORIES) {
@@ -139,30 +114,6 @@ async function main() {
     });
 
     categories.set(saved.slug, saved.id);
-  }
-
-  const children = [
-    { fullName: 'Amirbek', age: 2, avatar: '🦁' },
-    { fullName: 'Zilola', age: 4, avatar: '🦄' },
-    { fullName: 'Sardor', age: 6, avatar: '🚀' },
-  ];
-
-  for (const child of children) {
-    const existing = await prisma.child.findFirst({
-      where: { parentId: parent.id, fullName: child.fullName },
-    });
-
-    if (existing) continue;
-
-    await prisma.child.create({
-      data: {
-        parentId: parent.id,
-        fullName: child.fullName,
-        birthDate: birthDateForAge(child.age),
-        avatar: child.avatar,
-        stats: { create: {} },
-      },
-    });
   }
 
   if ((await prisma.lesson.count()) === 0) {
@@ -198,10 +149,77 @@ async function main() {
     }
   }
 
+  console.log('seed: kontent tayyor (fanlar, darslar, o‘yinlar).');
+}
+
+async function seedDemo() {
+  const password = await hashPassword('password123');
+
+  await prisma.user.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: {},
+    create: {
+      fullName: 'Administrator',
+      email: 'admin@gmail.com',
+      password,
+      role: USER_ROLE.ADMIN,
+    },
+  });
+
+  const parent = await prisma.user.upsert({
+    where: { email: 'parent@gmail.com' },
+    update: {},
+    create: {
+      fullName: 'Malika Abduvaliyeva',
+      email: 'parent@gmail.com',
+      password,
+      role: USER_ROLE.PARENT,
+      phone: '+998901234567',
+    },
+  });
+
+  const children = [
+    { fullName: 'Amirbek', age: 2, avatar: '🦁' },
+    { fullName: 'Zilola', age: 4, avatar: '🦄' },
+    { fullName: 'Sardor', age: 6, avatar: '🚀' },
+  ];
+
+  for (const child of children) {
+    const existing = await prisma.child.findFirst({
+      where: { parentId: parent.id, fullName: child.fullName },
+    });
+
+    if (existing) continue;
+
+    await prisma.child.create({
+      data: {
+        parentId: parent.id,
+        fullName: child.fullName,
+        birthDate: birthDateForAge(child.age),
+        avatar: child.avatar,
+        stats: { create: {} },
+      },
+    });
+  }
+
   const demoChildren = await prisma.child.findMany({ where: { parentId: parent.id } });
 
   for (const child of demoChildren) {
     await seedActivity(child.id, ageGroupOf(child.birthDate));
+  }
+
+  console.log('seed: demo hisoblar tayyor (admin@gmail.com / parent@gmail.com — password123).');
+}
+
+async function main() {
+  await seedContent();
+
+  const demoRequested = process.env.SEED_DEMO === 'true' || (process.env.STAGE !== 'production' && process.env.SEED_DEMO !== 'false');
+
+  if (demoRequested) {
+    await seedDemo();
+  } else {
+    console.log("seed: demo hisoblar o'tkazib yuborildi (SEED_DEMO=true bilan yoqiladi).");
   }
 }
 

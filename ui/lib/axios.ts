@@ -62,16 +62,12 @@ api.interceptors.response.use(
           toast.error(translateServerMessage(message));
         }
 
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = "/login";
 
         return Promise.reject(error);
       }
     }
 
-    // A role-scoped 403 means a screen from the previous session refetched right after a
-    // role switch (parent ⇄ child). Routing already sends the user to their own home page,
-    // so there is nothing here for them to act on.
     if (status === 403 && message.trim().toLowerCase() === ROLE_MISMATCH) {
       return Promise.reject(error);
     }
